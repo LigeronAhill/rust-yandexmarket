@@ -1,0 +1,4 @@
+[config]
+access_token = 'someaccesstoken'
+check_token = 'somechecktoken'
+base_url = "https://api.partner.market.yandex.ru/"

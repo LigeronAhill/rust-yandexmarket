@@ -1,0 +1,5 @@
+/target
+.*
+!.gitignore
+Config.toml
+Makefile.toml
