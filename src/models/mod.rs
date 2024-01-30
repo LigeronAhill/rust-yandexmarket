@@ -2,9 +2,10 @@ use serde::{Deserialize, Serialize};
 
 pub mod campaigns;
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum ApiResponseStatusType {
-    OK,
-    ERROR,
+    Ok,
+    Error,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

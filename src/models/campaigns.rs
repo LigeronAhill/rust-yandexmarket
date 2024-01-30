@@ -108,11 +108,12 @@ pub struct CampaignSettingsTimePeriodDTO {
 }
 /// Источник информации о расписании работы службы доставки
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum CampaignSettingsScheduleSourceType {
     /// информация получена из настроек личного кабинета магазина на Яндекс Маркете
-    WEB,
+    Web,
     /// информация получена из прайс-листа магазина
-    YML,
+    Yml,
 }
 
 /// Тип региона.
@@ -201,13 +202,14 @@ pub struct BusinessDTO {
 }
 /// Модель, по которой работает магазин
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum PlacementType {
     /// FBS или Экспресс
-    FBS,
+    Fbs,
     /// FBY
-    FBY,
+    Fby,
     /// DBS
-    DBS,
+    Dbs,
 }
 
 fn deserialize_dates_from_str<'de, D>(deserializer: D) -> Result<Vec<NaiveDate>, D::Error>
