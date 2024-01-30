@@ -3,7 +3,7 @@ name = "rust-yandexmarket"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
-license = "MIT"
+license = "LICENSE"
 description = "Библиотека для работы с API Yandex.Market на языке программирования Rust"
 repository = ""
 readme = "README.md"
@@ -11,7 +11,11 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = {version = "0.11.23", features = ["gzip", "json"]}
+reqwest = { version = "0.11.23", features = ["gzip", "json"] }
 serde = { version = "1.0.196", features = ["derive"] }
 tokio = { version = "1.35.1", features = ["full"] }
 toml = "0.8.8"
+tracing = { version = "0.1.40", features = ["attributes"] }
+
+[dev-dependencies]
+tracing-subscriber = "0.3.18"

@@ -1,12 +1,14 @@
+use tracing::{debug, instrument};
+
 use crate::{models::campaigns::CampaignDTO, Result};
-#[allow(dead_code)]
+// #[allow(dead_code)]
 #[derive(Debug, serde::Deserialize)]
 struct Config {
     access_token: String,
     check_token: String,
     base_url: String,
 }
-#[allow(dead_code)]
+// #[allow(dead_code)]
 #[derive(Debug, serde::Deserialize)]
 struct ConfigToml {
     config: Config,
@@ -40,8 +42,9 @@ impl MarketClient {
     /// # Examples
     ///
     /// ```
+    /// use rust_yandexmarket::{MarketClient, Result};
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<()> {
     ///     let market_client = MarketClient::init().await?;
     ///     // Use the market_client instance...
     ///     Ok(())
@@ -56,7 +59,9 @@ impl MarketClient {
     /// base_url = "https://api.partner.market.yandex.ru/"
     /// ```
     ///
+    #[instrument]
     pub async fn init() -> Result<Self> {
+        debug!("Initializing MarketClient");
         let file_path = "Config.toml";
         let mut file = match std::fs::File::open(file_path) {
             Ok(f) => f,
