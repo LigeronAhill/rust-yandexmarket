@@ -1,6 +1,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CampaignResponse {
+    /// Список с информацией по каждому магазину.
+    pub campaign: CampaignDTO,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CampaignsResponse {
     /// Список с информацией по каждому магазину.
     pub campaigns: Vec<CampaignDTO>,
