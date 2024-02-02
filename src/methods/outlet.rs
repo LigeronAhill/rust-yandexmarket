@@ -3,7 +3,8 @@ use tracing::{debug, instrument};
 use crate::{
     models::{
         outlets::{
-            CreateOutletDTO, CreateOutletResponse, FullOutletDTO, OutletResponse, OutletsResponse,
+            CreateOutletDTO, CreateOutletResponse, FullOutletDTO, FullOutletLicenseDTO,
+            LicenseResponse, OutletResponse, OutletsResponse,
         },
         ErrorResponse,
     },
@@ -439,21 +440,63 @@ impl<'a> Outlets<'a> {
             }
         }
     }
+    /// Возвращает информацию о лицензиях для точек продаж.
+    ///
+    /// В течение суток этим и другими запросами о точках продаж, кроме запроса GET delivery/services, можно получить и изменить информацию об определенном суммарном количестве точек продаж. Оно зависит от количества точек продаж магазина.
+    ///
+    /// ⚙️ Лимит: 100 000 запросов в час
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_yandexmarket::{MarketClient, Result};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let client = MarketClient::init().await?;
+    ///     let licenses = client.outlets().get_all_licenses(357750157).await?;
+    ///     println!("{licenses:#?}");
+    ///     Ok(())
+    /// }
+    /// ```
     #[instrument]
-    pub async fn get_all_licenses(&self) -> Result<()> {
+    pub async fn get_all_licenses(&self, outlet_id: i64) -> Result<Vec<FullOutletLicenseDTO>> {
         debug!("Getting licenses");
-        todo!()
+        let uri = format!(
+            "{}campaigns/{}/outlets/licenses",
+            crate::BASE_URL,
+            self.api_client.campaign_id()
+        );
+        let response = self
+            .api_client
+            .client()
+            .get(&uri)
+            .bearer_auth(self.api_client.access_token())
+            .query(&[("outletIds", outlet_id)])
+            .send()
+            .await?;
+        match response.status() {
+            reqwest::StatusCode::OK => {
+                let licenses_response: LicenseResponse = response.json().await?;
+                Ok(licenses_response.result.licenses)
+            }
+            _ => {
+                let err: ErrorResponse = response.json().await?;
+                let msg = format!("Error getting licenses\n{err:#?}");
+                Err(msg.into())
+            }
+        }
     }
-    #[instrument]
-    pub async fn modify_license(&self) -> Result<()> {
-        debug!("Modifying license");
-        todo!()
-    }
-    #[instrument]
-    pub async fn delete_license(&self) -> Result<()> {
-        debug!("Deleting license");
-        todo!()
-    }
+    // #[instrument]
+    // pub async fn modify_license(&self) -> Result<()> {
+    //     debug!("Modifying license");
+    //     todo!()
+    // }
+    // #[instrument]
+    // pub async fn delete_license(&self) -> Result<()> {
+    //     debug!("Deleting license");
+    //     todo!()
+    // }
 }
 impl MarketClient {
     /// Точки продаж    
