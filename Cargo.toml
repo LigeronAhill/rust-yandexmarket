@@ -7,7 +7,8 @@ rust-version = "1.75"
 license = "https://github.com/LigeronAhill/rust-yandexmarket/blob/main/LICENSE"
 description = "Библиотека для работы с API Yandex.Market на языке программирования Rust"
 repository = "https://github.com/LigeronAhill/rust-yandexmarket"
-readme = "https://github.com/LigeronAhill/rust-yandexmarket/blob/main/README.md"
+readme = "README.md"
+#readme = "https://github.com/LigeronAhill/rust-yandexmarket/blob/main/README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -16,6 +17,7 @@ chrono = { version = "0.4.33", features = ["serde"] }
 reqwest = { version = "0.11.23", features = ["gzip", "json"] }
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
+serde_with = "3.6.0"
 tokio = { version = "1.35.1", features = ["full"] }
 toml = "0.8.8"
 tracing = { version = "0.1.40", features = ["attributes"] }

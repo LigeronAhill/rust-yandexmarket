@@ -1,14 +1,13 @@
 use tracing::{debug, instrument};
 
-use crate::{models::campaigns::CampaignDTO, Result};
-// #[allow(dead_code)]
+use crate::Result;
+pub const BASE_URL: &str = "https://api.partner.market.yandex.ru/";
+
 #[derive(Debug, serde::Deserialize)]
 struct Config {
     access_token: String,
     check_token: String,
-    base_url: String,
 }
-// #[allow(dead_code)]
 #[derive(Debug, serde::Deserialize)]
 struct ConfigToml {
     config: Config,
@@ -32,12 +31,12 @@ pub struct MarketClient {
     client: reqwest::Client,
     access_token: String,
     check_token: String,
-    base_url: String,
-    campaigns: Vec<CampaignDTO>,
+    campaign_id: i64,
+    business_id: i64,
 }
 
 impl MarketClient {
-    /// Initializes a new `MarketClient` instance.
+    /// Initializes a new `MarketClient` instance for first campaignId in a list.
     ///
     /// # Examples
     ///
@@ -56,33 +55,30 @@ impl MarketClient {
     /// [config]
     /// access_token = 'someaccesstoken'
     /// check_token = 'somechecktoken'
-    /// base_url = "https://api.partner.market.yandex.ru/"
     /// ```
     ///
     #[instrument]
     pub async fn init() -> Result<Self> {
         debug!("Initializing MarketClient");
         let file_path = "Config.toml";
-        let mut file = match std::fs::File::open(file_path) {
-            Ok(f) => f,
-            Err(e) => panic!("no such file {} exception:{}", file_path, e),
-        };
+        let mut file = std::fs::File::open(file_path)?;
         let mut str_val = String::new();
-        match std::io::Read::read_to_string(&mut file, &mut str_val) {
-            Ok(s) => s,
-            Err(e) => panic!("Error Reading file: {}", e),
-        };
-        let config: ConfigToml = toml::from_str(&str_val).unwrap();
+        std::io::Read::read_to_string(&mut file, &mut str_val)?;
+        let config: ConfigToml = toml::from_str(&str_val)?;
         let client = reqwest::Client::builder().gzip(true).build()?;
         let mut result = MarketClient {
             client,
             access_token: config.config.access_token,
             check_token: config.config.check_token,
-            base_url: config.config.base_url,
-            campaigns: vec![],
+            campaign_id: 0,
+            business_id: 0,
         };
-        let campaigns = result.get_all_campaigns().await?;
-        result.campaigns = campaigns;
+        let campaigns = result.campaigns().get_all_campaigns().await?;
+        let Some(campaign) = campaigns.first() else {
+            return Err("No campaigns found".into());
+        };
+        result.campaign_id = campaign.id;
+        result.business_id = campaign.business.id;
         Ok(result)
     }
     pub fn client(&self) -> &reqwest::Client {
@@ -94,10 +90,10 @@ impl MarketClient {
     pub fn check_token(&self) -> &str {
         &self.check_token
     }
-    pub fn base_url(&self) -> &str {
-        &self.base_url
+    pub fn campaign_id(&self) -> i64 {
+        self.campaign_id
     }
-    pub fn campaigns(&self) -> &Vec<CampaignDTO> {
-        &self.campaigns
+    pub fn business_id(&self) -> i64 {
+        self.business_id
     }
 }

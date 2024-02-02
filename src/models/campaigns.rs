@@ -1,5 +1,8 @@
+use crate::models::FlippingPagerDTO;
 use chrono::NaiveDate;
 use serde::{Deserialize, Deserializer, Serialize};
+
+use super::geobases::RegionType;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoginsResponse {
@@ -14,6 +17,23 @@ pub struct SettingsResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 /// Настройки магазина.
+///
+/// # Example
+///
+/// ```rust
+/// use rust_yandexmarket::{MarketClient, Result};
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     tracing_subscriber::fmt::init();
+///     let client = MarketClient::init().await?;
+///     let campaigns = client.campaigns().get_all_campaigns().await?;
+///     let id = campaigns.first().unwrap().id;
+///     let settings = client.campaigns().get_settings(id).await?;
+///     println!("{settings:#?}");
+///     Ok(())
+/// }
+/// ```
 pub struct CampaignSettingsDTO {
     /// Идентификатор региона, в котором находится магазин.
     pub country_region: i64,
@@ -110,39 +130,12 @@ pub struct CampaignSettingsTimePeriodDTO {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum CampaignSettingsScheduleSourceType {
-    /// информация получена из настроек личного кабинета магазина на Яндекс Маркете
+    /// Информация получена из настроек личного кабинета магазина на Яндекс Маркете
     Web,
-    /// информация получена из прайс-листа магазина
+    /// Информация получена из прайс-листа магазина
     Yml,
 }
 
-/// Тип региона.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum RegionType {
-    /// неизвестный регион
-    Other,
-    /// континент
-    Continent,
-    /// регион
-    Region,
-    /// страна
-    Country,
-    /// область
-    CountrDistrict,
-    /// субъект федерации
-    Republic,
-    /// крупный город
-    City,
-    /// город
-    Village,
-    /// район города
-    CityDistrict,
-    /// станция метро
-    SubwayStation,
-    /// район субъекта федерации
-    RepublicArea,
-}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CampaignResponse {
     /// Информация о магазине
@@ -156,6 +149,26 @@ pub struct CampaignsResponse {
     pub pager: FlippingPagerDTO,
 }
 /// Информация о магазине.
+///
+/// # Example
+///
+/// ```rust
+/// use rust_yandexmarket::{MarketClient, Result};
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     tracing_subscriber::fmt::init();
+///     let client = MarketClient::init().await?;
+///     let campaigns = client.campaigns().get_all_campaigns().await?;
+///     let id = campaigns.first().unwrap().id;
+///     let campaign = client.campaigns().get_campaign(id).await?;
+///     let logins = client.campaigns().get_logins(campaign.id).await?;
+///     let login = logins.first().unwrap();
+///     let login_campaigns = client.campaigns().get_logins_campaigns(login).await?;
+///     println!("{login_campaigns:#?}");
+///     Ok(())
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CampaignDTO {
@@ -174,23 +187,6 @@ pub struct CampaignDTO {
     /// - `DBS` — DBS.
     /// Enum: FBS, FBY, DBS
     pub placement_type: PlacementType,
-}
-/// Модель для пагинации.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlippingPagerDTO {
-    /// Сколько всего найдено элементов.
-    pub total: i32,
-    /// Начальный номер найденного элемента на странице.
-    pub from: i32,
-    /// Конечный номер найденного элемента на странице.
-    pub to: i32,
-    /// Текущая страница.
-    pub current_page: i32,
-    /// Общее количество страниц.
-    pub pages_count: i32,
-    /// Размер страницы.
-    pub page_size: i32,
 }
 /// Информацию о кабинете.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -216,9 +212,9 @@ fn deserialize_dates_from_str<'de, D>(deserializer: D) -> Result<Vec<NaiveDate>,
 where
     D: Deserializer<'de>,
 {
-    let date_strs: Vec<String> = Vec::deserialize(deserializer)?;
+    let date_strings: Vec<String> = Vec::deserialize(deserializer)?;
     let mut dates = Vec::new();
-    for date_str in date_strs {
+    for date_str in date_strings {
         let date =
             NaiveDate::parse_from_str(&date_str, "%d-%m-%Y").map_err(serde::de::Error::custom)?;
         dates.push(date);

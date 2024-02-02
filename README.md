@@ -16,11 +16,16 @@ use rust_yandexmarket::{MarketClient, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = MarketClient::init().await?;
-    for c in client.campaigns() {
-        println!("{:#?}", c.business);
-    }
+    let market_client = MarketClient::init().await?;
+    // Use the market_client instance...
     Ok(())
 }
 
+```
+## Config.toml
+
+```toml
+[config]
+access_token = 'someaccesstoken'
+check_token = 'somechecktoken'
 ```
