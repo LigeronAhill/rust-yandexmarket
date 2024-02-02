@@ -11,4 +11,5 @@ pub use models::outlets::{
     Address, DayOfWeekType, DeliveryRule, Outlet, OutletType, OutletVisibilityType,
     WorkingScheduleItem,
 };
+
 mod models;

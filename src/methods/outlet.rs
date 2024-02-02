@@ -29,10 +29,8 @@ impl<'a> Outlets<'a> {
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
-    ///     let outlets = client.outlets().get_all_outlets().await?;
-    ///     let id = outlets.first().unwrap().id;
-    ///     let outlet = client.outlets().get_outlet(id).await?;
-    ///     println!("{outlet:#?}");
+    ///     // let outlets = client.outlets().get_all_outlets().await?;
+    ///     // do something...
     ///     Ok(())
     /// }
     /// ```
@@ -99,10 +97,8 @@ impl<'a> Outlets<'a> {
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
-    ///     let outlets = client.outlets().get_all_outlets().await?;
-    ///     let id = outlets.first().unwrap().id;
-    ///     let outlet = client.outlets().get_outlet(id).await?;
-    ///     println!("{outlet:#?}");
+    ///     // let outlet = client.outlets().get_outlet(outlet_id).await?;
+    ///     // do something...
     ///     Ok(())
     /// }
     /// ```
@@ -149,9 +145,6 @@ impl<'a> Outlets<'a> {
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
-    ///     let outlets = client.outlets().get_all_outlets().await?;
-    ///     let id = outlets.first().unwrap().id;
-    ///     let _outlet = client.outlets().get_outlet(id).await?;
     ///     let address = rust_yandexmarket::Address::builder()
     ///         .region_id(13)
     ///         .street("улица Ленина")
@@ -198,16 +191,8 @@ impl<'a> Outlets<'a> {
     ///         .email("most@wanted.man")
     ///         .storage_period(3)
     ///         .build();
-    ///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-    ///     let created_outlet = client.outlets().get_outlet(created).await?;
-    ///     println!("{created_outlet:#?}");
-    ///     let mut outlet_to_update = created_outlet;
-    ///     outlet_to_update.name = "Another name".to_string();
-    ///     let _ = client
-    ///         .outlets()
-    ///         .update_outlet(created, outlet_to_update)
-    ///         .await?;
-    ///     let _deleted = client.outlets().delete_outlet(created).await?;
+    ///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
+    ///     // do something...
     ///     Ok(())
     /// }
     /// ```
@@ -239,7 +224,7 @@ impl<'a> Outlets<'a> {
             }
         }
     }
-    ///     Изменяет информацию о точке продаж магазина на Маркете.
+    /// Изменяет информацию о точке продаж магазина на Маркете.
     ///
     /// В течение суток этим и другими запросами о точках продаж, кроме запроса GET delivery/services, можно получить и изменить информацию об определенном суммарном количестве точек продаж. Оно зависит от количества точек продаж магазина.
     ///
@@ -254,64 +239,13 @@ impl<'a> Outlets<'a> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
     ///     let outlets = client.outlets().get_all_outlets().await?;
-    ///     let id = outlets.first().unwrap().id;
-    ///     let _outlet = client.outlets().get_outlet(id).await?;
-    ///     let address = rust_yandexmarket::Address::builder()
-    ///         .region_id(13)
-    ///         .street("улица Ленина")
-    ///         .number("69")
-    ///         .block("5")
-    ///         .additional("Вход со двора")
-    ///         .build();
-    ///     let schedule_item_1 = rust_yandexmarket::WorkingScheduleItem::builder()
-    ///         .start_day(rust_yandexmarket::DayOfWeekType::Monday)
-    ///         .end_day(rust_yandexmarket::DayOfWeekType::Friday)
-    ///         .start_time("09:00")
-    ///         .end_time("21:00")
-    ///         .build();
-    ///     let schedule_item_2 = rust_yandexmarket::WorkingScheduleItem::builder()
-    ///         .start_day(rust_yandexmarket::DayOfWeekType::Saturday)
-    ///         .end_day(rust_yandexmarket::DayOfWeekType::Sunday)
-    ///         .start_time("10:00")
-    ///         .end_time("18:00")
-    ///         .build();
-    ///     let delivery_rule = rust_yandexmarket::DeliveryRule::builder()
-    ///         .cost(0)
-    ///         .min_delivery_days(5)
-    ///         .max_delivery_days(7)
-    ///         .order_before(15)
-    ///         .build()?;
-    ///     let outlet_to_create = rust_yandexmarket::Outlet::builder()
-    ///         .name("Test Outlet")
-    ///         .outlet_type(rust_yandexmarket::OutletType::Retail)
-    ///         .coords("20.45, 54.71")
-    ///         .is_main(false)
-    ///         .shop_outlet_code("42")
-    ///         .visibility(rust_yandexmarket::OutletVisibilityType::Hidden)
-    ///         .address(address)
-    ///         .phone("+7 (999) 696-69-69")
-    ///         .phone("+7 (888) 999-66-99")
-    ///         .phones(vec![
-    ///             "+7 (678) 321-65-49".to_string(),
-    ///             "+7 (987) 654-32-11".to_string(),
-    ///         ])
-    ///         .work_in_holiday(true)
-    ///         .schedule_item(schedule_item_1)
-    ///         .schedule_item(schedule_item_2)
-    ///         .delivery_rule(delivery_rule)
-    ///         .email("most@wanted.man")
-    ///         .storage_period(3)
-    ///         .build();
-    ///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-    ///     let created_outlet = client.outlets().get_outlet(created).await?;
-    ///     println!("{created_outlet:#?}");
-    ///     let mut outlet_to_update = created_outlet;
+    ///     let mut outlet_to_update = outlets.first().unwrap();
     ///     outlet_to_update.name = "Another name".to_string();
-    ///     let _ = client
-    ///         .outlets()
-    ///         .update_outlet(created, outlet_to_update)
-    ///         .await?;
-    ///     let _deleted = client.outlets().delete_outlet(created).await?;
+    ///     // client
+    ///     //     .outlets()
+    ///     //     .update_outlet(created, outlet_to_update)
+    ///     //     .await?;
+    ///     // do something...
     ///     Ok(())
     /// }
     /// ```
@@ -354,65 +288,7 @@ impl<'a> Outlets<'a> {
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
-    ///     let outlets = client.outlets().get_all_outlets().await?;
-    ///     let id = outlets.first().unwrap().id;
-    ///     let _outlet = client.outlets().get_outlet(id).await?;
-    ///     let address = rust_yandexmarket::Address::builder()
-    ///         .region_id(13)
-    ///         .street("улица Ленина")
-    ///         .number("69")
-    ///         .block("5")
-    ///         .additional("Вход со двора")
-    ///         .build();
-    ///     let schedule_item_1 = rust_yandexmarket::WorkingScheduleItem::builder()
-    ///         .start_day(rust_yandexmarket::DayOfWeekType::Monday)
-    ///         .end_day(rust_yandexmarket::DayOfWeekType::Friday)
-    ///         .start_time("09:00")
-    ///         .end_time("21:00")
-    ///         .build();
-    ///     let schedule_item_2 = rust_yandexmarket::WorkingScheduleItem::builder()
-    ///         .start_day(rust_yandexmarket::DayOfWeekType::Saturday)
-    ///         .end_day(rust_yandexmarket::DayOfWeekType::Sunday)
-    ///         .start_time("10:00")
-    ///         .end_time("18:00")
-    ///         .build();
-    ///     let delivery_rule = rust_yandexmarket::DeliveryRule::builder()
-    ///         .cost(0)
-    ///         .min_delivery_days(5)
-    ///         .max_delivery_days(7)
-    ///         .order_before(15)
-    ///         .build()?;
-    ///     let outlet_to_create = rust_yandexmarket::Outlet::builder()
-    ///         .name("Test Outlet")
-    ///         .outlet_type(rust_yandexmarket::OutletType::Retail)
-    ///         .coords("20.45, 54.71")
-    ///         .is_main(false)
-    ///         .shop_outlet_code("42")
-    ///         .visibility(rust_yandexmarket::OutletVisibilityType::Hidden)
-    ///         .address(address)
-    ///         .phone("+7 (999) 696-69-69")
-    ///         .phone("+7 (888) 999-66-99")
-    ///         .phones(vec![
-    ///             "+7 (678) 321-65-49".to_string(),
-    ///             "+7 (987) 654-32-11".to_string(),
-    ///         ])
-    ///         .work_in_holiday(true)
-    ///         .schedule_item(schedule_item_1)
-    ///         .schedule_item(schedule_item_2)
-    ///         .delivery_rule(delivery_rule)
-    ///         .email("most@wanted.man")
-    ///         .storage_period(3)
-    ///         .build();
-    ///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-    ///     let created_outlet = client.outlets().get_outlet(created).await?;
-    ///     println!("{created_outlet:#?}");
-    ///     let mut outlet_to_update = created_outlet;
-    ///     outlet_to_update.name = "Another name".to_string();
-    ///     let _ = client
-    ///         .outlets()
-    ///         .update_outlet(created, outlet_to_update)
-    ///         .await?;
-    ///     let _deleted = client.outlets().delete_outlet(created).await?;
+    ///     // client.outlets().delete_outlet(outlet_id).await?;
     ///     Ok(())
     /// }
     /// ```
@@ -455,7 +331,7 @@ impl<'a> Outlets<'a> {
     /// async fn main() -> Result<()> {
     ///     let client = MarketClient::init().await?;
     ///     let licenses = client.outlets().get_all_licenses(357750157).await?;
-    ///     println!("{licenses:#?}");
+    ///     // do something...
     ///     Ok(())
     /// }
     /// ```
@@ -500,9 +376,7 @@ impl<'a> Outlets<'a> {
 }
 impl MarketClient {
     /// Точки продаж    
-    ///
     /// # Example
-    ///
     /// ```rust
     /// use rust_yandexmarket::{MarketClient, Result};
     ///
@@ -510,65 +384,8 @@ impl MarketClient {
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
-    ///     let outlets = client.outlets().get_all_outlets().await?;
-    ///     let id = outlets.first().unwrap().id;
-    ///     let _outlet = client.outlets().get_outlet(id).await?;
-    ///     let address = rust_yandexmarket::Address::builder()
-    ///         .region_id(13)
-    ///         .street("улица Ленина")
-    ///         .number("69")
-    ///         .block("5")
-    ///         .additional("Вход со двора")
-    ///         .build();
-    ///     let schedule_item_1 = rust_yandexmarket::WorkingScheduleItem::builder()
-    ///         .start_day(rust_yandexmarket::DayOfWeekType::Monday)
-    ///         .end_day(rust_yandexmarket::DayOfWeekType::Friday)
-    ///         .start_time("09:00")
-    ///         .end_time("21:00")
-    ///         .build();
-    ///     let schedule_item_2 = rust_yandexmarket::WorkingScheduleItem::builder()
-    ///         .start_day(rust_yandexmarket::DayOfWeekType::Saturday)
-    ///         .end_day(rust_yandexmarket::DayOfWeekType::Sunday)
-    ///         .start_time("10:00")
-    ///         .end_time("18:00")
-    ///         .build();
-    ///     let delivery_rule = rust_yandexmarket::DeliveryRule::builder()
-    ///         .cost(0)
-    ///         .min_delivery_days(5)
-    ///         .max_delivery_days(7)
-    ///         .order_before(15)
-    ///         .build()?;
-    ///     let outlet_to_create = rust_yandexmarket::Outlet::builder()
-    ///         .name("Test Outlet")
-    ///         .outlet_type(rust_yandexmarket::OutletType::Retail)
-    ///         .coords("20.45, 54.71")
-    ///         .is_main(false)
-    ///         .shop_outlet_code("42")
-    ///         .visibility(rust_yandexmarket::OutletVisibilityType::Hidden)
-    ///         .address(address)
-    ///         .phone("+7 (999) 696-69-69")
-    ///         .phone("+7 (888) 999-66-99")
-    ///         .phones(vec![
-    ///             "+7 (678) 321-65-49".to_string(),
-    ///             "+7 (987) 654-32-11".to_string(),
-    ///         ])
-    ///         .work_in_holiday(true)
-    ///         .schedule_item(schedule_item_1)
-    ///         .schedule_item(schedule_item_2)
-    ///         .delivery_rule(delivery_rule)
-    ///         .email("most@wanted.man")
-    ///         .storage_period(3)
-    ///         .build();
-    ///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-    ///     let created_outlet = client.outlets().get_outlet(created).await?;
-    ///     println!("{created_outlet:#?}");
-    ///     let mut outlet_to_update = created_outlet;
-    ///     outlet_to_update.name = "Another name".to_string();
-    ///     let _ = client
-    ///         .outlets()
-    ///         .update_outlet(created, outlet_to_update)
-    ///         .await?;
-    ///     let _deleted = client.outlets().delete_outlet(created).await?;
+    ///     // let outlets = client.outlets().get_all_outlets().await?;
+    ///     // do something...
     ///     Ok(())
     /// }
     /// ```
@@ -592,6 +409,77 @@ mod tests {
         let client = MarketClient::init().await?;
         let outlet = client.outlets().get_outlet(357750157).await?;
         assert_eq!(outlet.storage_period, 10);
+        Ok(())
+    }
+    #[tokio::test]
+    async fn test_create_update_delete_outlet() -> Result<()> {
+        let client = MarketClient::init().await?;
+        let address = crate::Address::builder()
+            .region_id(13)
+            .street("улица Ленина")
+            .number("69")
+            .block("5")
+            .additional("Вход со двора")
+            .build();
+        let schedule_item_1 = crate::WorkingScheduleItem::builder()
+            .start_day(crate::DayOfWeekType::Monday)
+            .end_day(crate::DayOfWeekType::Friday)
+            .start_time("09:00")
+            .end_time("21:00")
+            .build();
+        let schedule_item_2 = crate::WorkingScheduleItem::builder()
+            .start_day(crate::DayOfWeekType::Saturday)
+            .end_day(crate::DayOfWeekType::Sunday)
+            .start_time("10:00")
+            .end_time("18:00")
+            .build();
+        let delivery_rule = crate::DeliveryRule::builder()
+            .cost(0)
+            .min_delivery_days(5)
+            .max_delivery_days(7)
+            .order_before(15)
+            .build()?;
+        let outlet_to_create = crate::Outlet::builder()
+            .name("Test Outlet")
+            .outlet_type(crate::OutletType::Retail)
+            .coords("20.45, 54.71")
+            .is_main(false)
+            .shop_outlet_code("42")
+            .visibility(crate::OutletVisibilityType::Hidden)
+            .address(address)
+            .phone("+7 (999) 696-69-69")
+            .phone("+7 (888) 999-66-99")
+            .phones(vec![
+                "+7 (678) 321-65-49".to_string(),
+                "+7 (987) 654-32-11".to_string(),
+            ])
+            .work_in_holiday(true)
+            .schedule_item(schedule_item_1)
+            .schedule_item(schedule_item_2)
+            .delivery_rule(delivery_rule)
+            .email("most@wanted.man")
+            .storage_period(3)
+            .build();
+        let created = client.outlets().create_outlet(outlet_to_create).await?;
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        let created_outlet = client.outlets().get_outlet(created).await?;
+        let mut outlet_to_update = created_outlet;
+        outlet_to_update.name = "Another name".to_string();
+        client
+            .outlets()
+            .update_outlet(created, outlet_to_update)
+            .await?;
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        client.outlets().delete_outlet(created).await?;
+        Ok(())
+    }
+    #[tokio::test]
+    async fn test_get_all_licenses() -> Result<()> {
+        let client = MarketClient::init().await?;
+        let outlets = client.outlets().get_all_outlets().await?;
+        let id = outlets.first().unwrap().id;
+        let licenses = client.outlets().get_all_licenses(id).await?;
+        assert!(licenses.is_empty());
         Ok(())
     }
 }

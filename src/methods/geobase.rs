@@ -302,51 +302,15 @@ impl MarketClient {
 mod tests {
     use crate::{MarketClient, Result};
     #[tokio::test]
-    async fn test_get_all_campaigns() -> Result<()> {
+    async fn test_region() -> Result<()> {
         let client = MarketClient::init().await?;
-        let campaigns = client.campaigns().get_all_campaigns().await?;
-        assert!(!campaigns.is_empty());
-        Ok(())
-    }
-    #[tokio::test]
-    async fn test_get_campaign() -> Result<()> {
-        let client = MarketClient::init().await?;
-        let campaign = client
-            .campaigns()
-            .get_campaign(client.campaign_id())
-            .await?;
-        assert_eq!(campaign.id, client.campaign_id());
-        Ok(())
-    }
-    #[tokio::test]
-    async fn test_get_logins() -> Result<()> {
-        let client = MarketClient::init().await?;
-        let logins = client.campaigns().get_logins(client.campaign_id()).await?;
-        assert!(!logins.is_empty());
-        Ok(())
-    }
-    #[tokio::test]
-    async fn test_get_logins_campaigns() -> Result<()> {
-        let client = MarketClient::init().await?;
-        let login = client
-            .campaigns()
-            .get_logins(client.campaign_id())
-            .await?
-            .first()
-            .unwrap()
-            .to_string();
-        let campaigns = client.campaigns().get_logins_campaigns(login).await?;
-        assert!(!campaigns.is_empty());
-        Ok(())
-    }
-    #[tokio::test]
-    async fn test_get_campaign_settings() -> Result<()> {
-        let client = MarketClient::init().await?;
-        let settings = client
-            .campaigns()
-            .get_settings(client.campaign_id())
-            .await?;
-        assert!(settings.show_in_premium);
+        let regions = client.geobases().search_region("тамбов").await?;
+        assert!(!regions.is_empty());
+        let region_id = regions.first().ok_or("regions is empty")?.id;
+        let region = client.geobases().get_region(region_id).await?;
+        assert!(!region.is_empty());
+        let childrens = client.geobases().get_children_regions(region_id).await?;
+        assert!(!childrens.is_empty());
         Ok(())
     }
 }

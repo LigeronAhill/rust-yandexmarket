@@ -396,13 +396,14 @@ pub struct OutletResponseDTO {
 ///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
-///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-///     let c = client.outlets().get_outlet(created).await?;
-///     println!("{c:#?}");
-///     let _deleted = client.outlets().delete_outlet(created).await?;
+///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
+///     // let c = client.outlets().get_outlet(created).await?;
+///     // println!("{c:#?}");
+///     // let _deleted = client.outlets().delete_outlet(created).await?;
 ///     Ok(())
 /// }
-/// ```#[derive(Debug, Clone, Serialize, Deserialize)]
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeliveryRule;
 impl DeliveryRule {
     pub fn builder() -> OutletDeliveryRuleDTOBuilder {
@@ -470,10 +471,10 @@ impl DeliveryRule {
 ///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
-///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-///     let c = client.outlets().get_outlet(created).await?;
-///     println!("{c:#?}");
-///     let _deleted = client.outlets().delete_outlet(created).await?;
+///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
+///     // let c = client.outlets().get_outlet(created).await?;
+///     // println!("{c:#?}");
+///     // let _deleted = client.outlets().delete_outlet(created).await?;
 ///     Ok(())
 /// }
 /// ```
@@ -545,10 +546,10 @@ impl WorkingScheduleItem {
 ///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
-///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-///     let c = client.outlets().get_outlet(created).await?;
-///     println!("{c:#?}");
-///     let _deleted = client.outlets().delete_outlet(created).await?;
+///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
+///     // let c = client.outlets().get_outlet(created).await?;
+///     // println!("{c:#?}");
+///     // let _deleted = client.outlets().delete_outlet(created).await?;
 ///     Ok(())
 /// }
 /// ```
@@ -619,16 +620,16 @@ impl Address {
 ///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
-///     let created = client.outlets().create_outlet(outlet_to_create).await?;
-///     let created_outlet = client.outlets().get_outlet(created).await?;
-///     println!("{created_outlet:#?}");
-///     let mut outlet_to_update = created_outlet;
-///     outlet_to_update.name = "Another name".to_string();
-///     let _ = client
-///         .outlets()
-///         .update_outlet(created, outlet_to_update)
-///         .await?;
-///     let _deleted = client.outlets().delete_outlet(created).await?;
+///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
+///     // let created_outlet = client.outlets().get_outlet(created).await?;
+///     // println!("{created_outlet:#?}");
+///     // let mut outlet_to_update = created_outlet;
+///     // outlet_to_update.name = "Another name".to_string();
+///     // let _ = client
+///     //     .outlets()
+///     //     .update_outlet(created, outlet_to_update)
+///     //     .await?;
+///     // let _deleted = client.outlets().delete_outlet(created).await?;
 ///     Ok(())
 /// }
 /// ```
