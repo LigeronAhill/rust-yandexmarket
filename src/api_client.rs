@@ -81,6 +81,50 @@ impl MarketClient {
         result.business_id = campaign.business.id;
         Ok(result)
     }
+    #[instrument]
+    pub async fn from_env() -> Result<Self> {
+        debug!("Initializing MarketClient");
+        let access_token =
+            std::env::var("MARKET_ACCESS_TOKEN").expect("MARKET_ACCESS_TOKEN env var not set!");
+        let check_token =
+            std::env::var("MARKET_CHECK_TOKEN").expect("MARKET_CHECK_TOKEN env var not set!");
+        let client = reqwest::Client::builder().gzip(true).build()?;
+        let mut result = MarketClient {
+            client,
+            access_token,
+            check_token,
+            campaign_id: 0,
+            business_id: 0,
+        };
+        let campaigns = result.campaigns().get_all_campaigns().await?;
+        let Some(campaign) = campaigns.first() else {
+            return Err("No campaigns found".into());
+        };
+        result.campaign_id = campaign.id;
+        result.business_id = campaign.business.id;
+        Ok(result)
+    }
+    pub async fn with_tokens(
+        access_token: impl Into<String>,
+        check_token: impl Into<String>,
+    ) -> Result<Self> {
+        debug!("Initializing MarketClient");
+        let client = reqwest::Client::builder().gzip(true).build()?;
+        let mut result = MarketClient {
+            client,
+            access_token: access_token.into(),
+            check_token: check_token.into(),
+            campaign_id: 0,
+            business_id: 0,
+        };
+        let campaigns = result.campaigns().get_all_campaigns().await?;
+        let Some(campaign) = campaigns.first() else {
+            return Err("No campaigns found".into());
+        };
+        result.campaign_id = campaign.id;
+        result.business_id = campaign.business.id;
+        Ok(result)
+    }
     pub fn client(&self) -> &reqwest::Client {
         &self.client
     }

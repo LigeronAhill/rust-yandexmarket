@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod campaigns;
 pub mod geobases;
+pub mod offer_cards;
 pub mod offer_mappings;
 pub mod outlets;
 #[derive(Debug, Clone, Serialize, Deserialize)]
