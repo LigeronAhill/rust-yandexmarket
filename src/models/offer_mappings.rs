@@ -7,12 +7,95 @@ use super::{ApiResponseStatusType, ScrollingPagerDTO};
 #[serde(rename_all = "camelCase")]
 #[skip_serializing_none]
 pub struct OfferMappingRequest {
-    pub offer_ids: Option<Vec<String>>,
-    pub card_statuses: Option<Vec<OfferCardStatusType>>,
-    pub category_ids: Option<Vec<i64>>,
-    pub vendor_names: Option<Vec<String>>,
-    pub tags: Option<Vec<String>>,
-    pub archived: Option<bool>,
+    offer_ids: Option<Vec<String>>,
+    card_statuses: Option<Vec<OfferCardStatusType>>,
+    category_ids: Option<Vec<i64>>,
+    vendor_names: Option<Vec<String>>,
+    tags: Option<Vec<String>>,
+    archived: Option<bool>,
+}
+impl OfferMappingRequest {
+    pub fn builder() -> OfferMappingRequestBuilder {
+        OfferMappingRequestBuilder::default()
+    }
+}
+#[derive(Default)]
+pub struct OfferMappingRequestBuilder {
+    offer_ids: Option<Vec<String>>,
+    card_statuses: Option<Vec<OfferCardStatusType>>,
+    category_ids: Option<Vec<i64>>,
+    vendor_names: Option<Vec<String>>,
+    tags: Option<Vec<String>>,
+    archived: Option<bool>,
+}
+impl OfferMappingRequestBuilder {
+
+    /// Идентификаторы товаров, информация о которых нужна.
+    pub fn offer_ids(&mut self, offer_ids: Vec<String>) -> &mut Self {
+        self.offer_ids.get_or_insert(vec![]).extend(offer_ids);
+        self
+    }
+    /// Идентификатор товара, информация о которых нужна.
+    pub fn offer_id(&mut self, offer_id: impl Into<String>) -> &mut Self {
+       self.offer_ids.get_or_insert(vec![]).push(offer_id.into());
+        self
+    }
+    /// Фильтр по статусам карточек.
+    pub fn card_statuses(&mut self, card_statuses: Vec<OfferCardStatusType>) -> &mut Self {
+        self.card_statuses.get_or_insert(vec![]).extend(card_statuses);
+        self
+    }
+    /// Фильтр по статусам карточек.
+    pub fn card_status(&mut self, card_status: OfferCardStatusType) -> &mut Self {
+        self.card_statuses.get_or_insert(vec![]).push(card_status);
+        self
+    }
+    /// Фильтр по категориям на Маркете.
+    pub fn category_ids(&mut self, category_ids: Vec<i64>) -> &mut Self {
+        self.category_ids.get_or_insert(vec![]).extend(category_ids);
+        self
+    }
+    /// Фильтр по категориям на Маркете.
+    pub fn category_id(&mut self, category_id: i64) -> &mut Self {
+        self.category_ids.get_or_insert(vec![]).push(category_id);
+        self
+    }
+    /// Фильтр по брендам.
+    pub fn vendor_names(&mut self, vendor_names: Vec<String>) -> &mut Self {
+        self.vendor_names.get_or_insert(vec![]).extend(vendor_names);
+        self
+    }
+    /// Фильтр по брендам.
+    pub fn vendor_name(&mut self, vendor_name: impl Into<String>) -> &mut Self {
+        self.vendor_names.get_or_insert(vec![]).push(vendor_name.into());
+        self
+    }
+    /// Фильтр по тегам.
+    pub fn tags(&mut self, tags: Vec<String>) -> &mut Self {
+        self.tags.get_or_insert(vec![]).extend(tags);
+        self
+    }
+    /// Фильтр по тегам.
+    pub fn tag(&mut self, tag: impl Into<String>) -> &mut Self {
+        self.tags.get_or_insert(vec![]).push(tag.into());
+        self
+    }
+    /// Фильтр по нахождению в архиве.
+    /// Передаёт true, чтобы получить товары, находящиеся в архиве. Если фильтр не заполнен, в ответе возвращаются товары, не находящиеся в архиве.
+    pub fn archived(&mut self) -> &mut Self {
+       let _ = self.archived.insert(true);
+        self
+    }
+    pub fn build(&self) -> OfferMappingRequest {
+        OfferMappingRequest {
+            offer_ids: self.offer_ids.clone(),
+            card_statuses: self.card_statuses.clone(),
+            category_ids: self.category_ids.clone(),
+            vendor_names: self.vendor_names.clone(),
+            tags: self.tags.clone(),
+            archived: self.archived
+        }
+    }
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

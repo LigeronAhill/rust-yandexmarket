@@ -1,11 +1,21 @@
-use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+use rust_yandexmarket::{
+    MarketClient, OfferMappingRequest, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     let client = MarketClient::init().await?;
-    // let offers = client.offer_mappings().get_all_offers().await?;
-    // dbg!(offers);
+    let offers = client.offer_mappings().get_all_offers().await?;
+    dbg!(offers);
+    let req = OfferMappingRequest::builder()
+        .vendor_name("Homakoll")
+        .build();
+    let filtered_offers = client
+        .offer_mappings()
+        .get_all_offers_with_filter(req)
+        .await?;
+    dbg!(filtered_offers);
     let update = UpdateOfferMappingDTO::builder()
         .offer_id("Homakoll_164_Prof_1.3")
         .name("Клей Homakoll 164 Prof 1.3 кг")
@@ -24,9 +34,19 @@ async fn main() -> Result<()> {
         None,
     )];
     let _ = client.offer_mappings().update_offers_prices(prices).await?;
-    // tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
-    // let to_delete = vec!["Homakoll_164_Prof_1.3".to_string()];
-    // let not_deleted = client.offer_mappings().delete_offers(to_delete).await?;
-    // dbg!(not_deleted);
+    let not_archived = client
+        .offer_mappings()
+        .archive_offers(vec!["Homakoll_164_Prof_1.3".to_string()])
+        .await?;
+    dbg!(not_archived);
+    tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+    let not_unarchived = client
+        .offer_mappings()
+        .unarchive_offers(vec!["Homakoll_164_Prof_1.3".to_string()])
+        .await?;
+    dbg!(not_unarchived);
+    let to_delete = vec!["Homakoll_164_Prof_1.3".to_string()];
+    let not_deleted = client.offer_mappings().delete_offers(to_delete).await?;
+    dbg!(not_deleted);
     Ok(())
 }

@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
-use super::FlippingPagerDTO;
+use super::{FlippingPagerDTO, ForwardScrollingPagerDTO};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegionsResponse {
@@ -30,13 +30,7 @@ pub struct RegionDTO {
     /// Дочерние регионы.
     pub children: Option<Vec<RegionDTO>>,
 }
-/// Ссылка на следующую страницу.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ForwardScrollingPagerDTO {
-    /// Идентификатор следующей страницы результатов.
-    #[serde(rename = "nextPageToken")]
-    pub next_page_token: Option<String>,
-}
+
 /// Тип региона.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

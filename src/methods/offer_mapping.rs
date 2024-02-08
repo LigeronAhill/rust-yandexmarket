@@ -12,7 +12,7 @@ use crate::{
         },
         ApiResponseStatusType, ErrorResponse,
     },
-    MarketClient, Result,
+    MarketClient, OfferMappingRequest, Result,
 };
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +20,26 @@ use crate::{
 pub struct UpdatePricesRequest {
     pub offers: Vec<UpdateBusinessOfferPriceDTO>,
 }
+/// Установка цен
+///
+/// # Example
+///
+/// ```rust
+/// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     tracing_subscriber::fmt::init();
+///     let client = MarketClient::init().await?;
+///     let prices = vec![UpdateBusinessOfferPriceDTO::new(
+///         "Homakoll_164_Prof_1.3",
+///         1074.0,
+///         None,
+///     )];
+///     let _ = client.offer_mappings().update_offers_prices(prices).await?;
+///     Ok(())
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[skip_serializing_none]
@@ -93,6 +113,31 @@ pub struct ArchiveOffersDTO {
 pub struct UnarchiveOffersDTO {
     pub not_unarchived_offer_ids: Option<Vec<String>>,
 }
+/// Добавление товаров в каталог и редактирование информации о них
+///
+/// # Example
+///
+/// ```rust
+/// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     tracing_subscriber::fmt::init();
+///     let client = MarketClient::init().await?;
+///     let update = UpdateOfferMappingDTO::builder()
+///         .offer_id("Homakoll_164_Prof_1.3")
+///         .name("Клей Homakoll 164 Prof 1.3 кг")
+///         .category("Клей")
+///         .picture("https://main-cdn.sbermegamarket.ru/big2/hlr-system/335/279/913/730/125/5/600004169210b0.jpeg")
+///         .vendor("Homakoll")
+///         .description("Для коммерческого (гомогенного и гетерогенного) линолеума. Ковролина. ПВХ плитки. К любым основаниям. Морозостойкий.")
+///         .manufacturer_country("Россия")
+///         .weight_dimensions(20.0, 20.0, 20.0, 1.3)
+///         .build()?;
+///     let _ = client.offer_mappings().update_offers(vec![update]).await?;
+///     Ok(())
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[skip_serializing_none]
@@ -192,7 +237,7 @@ impl UpdateOfferMappingDTOBuilder {
         self.offer.pictures.get_or_insert(vec![]).extend(pictures);
         self
     }
-    /// Ссылка на изображения товара.     
+    /// Ссылка на изображения товара.
     /// Указывайте ссылку целиком, включая протокол http или https.
     /// Максимальная длина — 512 символов.
     /// Русские буквы в URL можно.
@@ -532,6 +577,48 @@ pub struct UpdateMappingDTO {
 }
 
 impl MarketClient {
+    /// Каталог
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     tracing_subscriber::fmt::init();
+    ///     let client = MarketClient::init().await?;
+    ///     let offers = client.offer_mappings().get_all_offers().await?;
+    ///     dbg!(offers);
+    ///     let update = UpdateOfferMappingDTO::builder()
+    ///         .offer_id("Homakoll_164_Prof_1.3")
+    ///         .name("Клей Homakoll 164 Prof 1.3 кг")
+    ///         .category("Клей")
+    ///         .picture("https://main-cdn.sbermegamarket.ru/big2/hlr-system/335/279/913/730/125/5/600004169210b0.jpeg")
+    ///         .vendor("Homakoll")
+    ///         .description("Для коммерческого (гомогенного и гетерогенного) линолеума. Ковролина. ПВХ плитки. К любым основаниям. Морозостойкий.")
+    ///         .manufacturer_country("Россия")
+    ///         .weight_dimensions(20.0, 20.0, 20.0, 1.3)
+    ///         .build()?;
+    ///     let _ = client.offer_mappings().update_offers(vec![update]).await?;
+    ///     tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+    ///     let prices = vec![UpdateBusinessOfferPriceDTO::new(
+    ///         "Homakoll_164_Prof_1.3",
+    ///         1074.0,
+    ///         None,
+    ///     )];
+    ///     let _ = client.offer_mappings().update_offers_prices(prices).await?;
+    ///     let not_archived = client.offer_mappings().archive_offers(vec!["Homakoll_164_Prof_1.3".to_string()]).await?;
+    ///     dbg!(not_archived);
+    ///     tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+    ///     let not_unarchived = client.offer_mappings().unarchive_offers(vec!["Homakoll_164_Prof_1.3".to_string()]).await?;
+    ///     dbg!(not_unarchived);
+    ///     let to_delete = vec!["Homakoll_164_Prof_1.3".to_string()];
+    ///     let not_deleted = client.offer_mappings().delete_offers(to_delete).await?;
+    ///     dbg!(not_deleted);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn offer_mappings(&self) -> OfferMapping {
         OfferMapping { api_client: self }
     }
@@ -545,7 +632,7 @@ impl<'a> OfferMapping<'a> {
     ///
     /// Можно использовать тремя способами:
     ///
-    /// задать список интересующих SKU;
+    /// Задать список интересующих SKU;
     /// задать фильтр — в этом случае результаты возвращаются постранично;
     /// не передавать тело запроса, чтобы получить список всех товаров в каталоге.
     /// ⚙️ Лимит: 600 запросов в минуту, не более 200 товаров в одном запросе
@@ -563,6 +650,7 @@ impl<'a> OfferMapping<'a> {
     ///     println!("{}", offers.len());
     ///     Ok(())
     /// }
+    /// ```
     #[instrument]
     pub async fn get_all_offers(&self) -> Result<Vec<GetOfferMappingDTO>> {
         debug!("Getting offers");
@@ -594,7 +682,80 @@ impl<'a> OfferMapping<'a> {
                 }
             };
             match response.status() {
-                reqwest::StatusCode::OK => {
+                StatusCode::OK => {
+                    let offers_response: OfferMappingResponse = response.json().await?;
+                    result.extend(offers_response.result.offer_mappings);
+                    next_page_token = offers_response.result.paging.next_page_token;
+                    if next_page_token.is_none() {
+                        break;
+                    }
+                }
+                _ => {
+                    let error: ErrorResponse = response.json().await?;
+                    let msg = format!("Error while getting offer-mappings\n{error:#?}");
+                    return Err(msg.into());
+                }
+            }
+        }
+        Ok(result)
+    }
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_yandexmarket::{MarketClient, OfferMappingRequest, Result};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     tracing_subscriber::fmt::init();
+    ///     let client = MarketClient::init().await?;
+    ///     let req = OfferMappingRequest::builder()
+    ///         .vendor_name("Homakoll")
+    ///         .build();
+    ///     let filtered_offers = client
+    ///         .offer_mappings()
+    ///         .get_all_offers_with_filter(req)
+    ///         .await?;
+    ///     dbg!(filtered_offers);
+    /// Ok(())
+    /// }
+    /// ```
+    #[instrument]
+    pub async fn get_all_offers_with_filter(
+        &self,
+        req: OfferMappingRequest,
+    ) -> Result<Vec<GetOfferMappingDTO>> {
+        debug!("Getting offers");
+        let uri = format!(
+            "{}businesses/{}/offer-mappings",
+            crate::BASE_URL,
+            self.api_client.business_id()
+        );
+        let mut next_page_token = None;
+        let mut result = Vec::new();
+        loop {
+            let response = match next_page_token {
+                Some(page_token) => {
+                    self.api_client
+                        .client()
+                        .post(&uri)
+                        .query(&[("page_token", page_token)])
+                        .bearer_auth(self.api_client.access_token())
+                        .json(&req)
+                        .send()
+                        .await?
+                }
+                None => {
+                    self.api_client
+                        .client()
+                        .post(&uri)
+                        .bearer_auth(self.api_client.access_token())
+                        .json(&req)
+                        .send()
+                        .await?
+                }
+            };
+            match response.status() {
+                StatusCode::OK => {
                     let offers_response: OfferMappingResponse = response.json().await?;
                     result.extend(offers_response.result.offer_mappings);
                     next_page_token = offers_response.result.paging.next_page_token;
@@ -762,6 +923,26 @@ impl<'a> OfferMapping<'a> {
             Err(errors.into())
         }
     }
+    /// Установка цен
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     tracing_subscriber::fmt::init();
+    ///     let client = MarketClient::init().await?;
+    ///     let prices = vec![UpdateBusinessOfferPriceDTO::new(
+    ///         "Homakoll_164_Prof_1.3",
+    ///         1074.0,
+    ///         None,
+    ///     )];
+    ///     let _ = client.offer_mappings().update_offers_prices(prices).await?;
+    ///     Ok(())
+    /// }
+    /// ```
     #[instrument]
     pub async fn update_offers_prices(
         &self,
@@ -789,7 +970,7 @@ impl<'a> OfferMapping<'a> {
             debug!("sleeping 6 secs");
             tokio::time::sleep(tokio::time::Duration::from_secs(6)).await;
             match response.status() {
-                reqwest::StatusCode::OK => continue,
+                StatusCode::OK => continue,
                 _ => {
                     let error: ErrorResponse = response.json().await?;
                     let msg = format!("Error while updating offers prices\n{error:#?}\n");
@@ -810,9 +991,21 @@ impl<'a> OfferMapping<'a> {
     /// Вначале такой товар нужно распродать или вывезти.
     ///
     /// ⚙️ Лимит: 5000 товаров в минуту, не более 200 товаров в одном запросе
+    ///
+    /// ```rust
+    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     tracing_subscriber::fmt::init();
+    ///     let client = MarketClient::init().await?;
+    ///     let not_archived = client.offer_mappings().archive_offers(vec!["Homakoll_164_Prof_1.3".to_string()]).await?;
+    ///     Ok(())
+    /// }
+    /// ```
     #[instrument]
     pub async fn archive_offers(&self, offer_ids: Vec<String>) -> Result<Vec<String>> {
-        debug!("Urchiving offers");
+        debug!("Archiving offers");
         let uri = format!(
             "{}businesses/{}/offer-mappings/archive",
             crate::BASE_URL,
@@ -862,6 +1055,18 @@ impl<'a> OfferMapping<'a> {
     /// Восстанавливает товары из архива.
     ///
     /// ⚙️ Лимит: 5000 товаров в минуту, не более 200 товаров в одном запросе
+    ///
+    /// ```rust
+    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     tracing_subscriber::fmt::init();
+    ///     let client = MarketClient::init().await?;
+    ///     let not_unarchived = client.offer_mappings().unarchive_offers(vec!["Homakoll_164_Prof_1.3".to_string()]).await?;
+    ///     Ok(())
+    /// }
+    /// ```
     #[instrument]
     pub async fn unarchive_offers(&self, offer_ids: Vec<String>) -> Result<Vec<String>> {
         debug!("Unarchiving offers");

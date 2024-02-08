@@ -49,3 +49,9 @@ pub struct ScrollingPagerDTO {
     /// Идентификатор предыдущей страницы результатов.
     pub prev_page_token: Option<String>,
 }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ForwardScrollingPagerDTO {
+    /// Идентификатор следующей страницы результатов.
+    #[serde(rename = "nextPageToken")]
+    pub next_page_token: Option<String>,
+}
