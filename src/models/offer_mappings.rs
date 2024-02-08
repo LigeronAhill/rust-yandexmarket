@@ -29,7 +29,6 @@ pub struct OfferMappingRequestBuilder {
     archived: Option<bool>,
 }
 impl OfferMappingRequestBuilder {
-
     /// Идентификаторы товаров, информация о которых нужна.
     pub fn offer_ids(&mut self, offer_ids: Vec<String>) -> &mut Self {
         self.offer_ids.get_or_insert(vec![]).extend(offer_ids);
@@ -37,12 +36,14 @@ impl OfferMappingRequestBuilder {
     }
     /// Идентификатор товара, информация о которых нужна.
     pub fn offer_id(&mut self, offer_id: impl Into<String>) -> &mut Self {
-       self.offer_ids.get_or_insert(vec![]).push(offer_id.into());
+        self.offer_ids.get_or_insert(vec![]).push(offer_id.into());
         self
     }
     /// Фильтр по статусам карточек.
     pub fn card_statuses(&mut self, card_statuses: Vec<OfferCardStatusType>) -> &mut Self {
-        self.card_statuses.get_or_insert(vec![]).extend(card_statuses);
+        self.card_statuses
+            .get_or_insert(vec![])
+            .extend(card_statuses);
         self
     }
     /// Фильтр по статусам карточек.
@@ -67,7 +68,9 @@ impl OfferMappingRequestBuilder {
     }
     /// Фильтр по брендам.
     pub fn vendor_name(&mut self, vendor_name: impl Into<String>) -> &mut Self {
-        self.vendor_names.get_or_insert(vec![]).push(vendor_name.into());
+        self.vendor_names
+            .get_or_insert(vec![])
+            .push(vendor_name.into());
         self
     }
     /// Фильтр по тегам.
@@ -83,7 +86,7 @@ impl OfferMappingRequestBuilder {
     /// Фильтр по нахождению в архиве.
     /// Передаёт true, чтобы получить товары, находящиеся в архиве. Если фильтр не заполнен, в ответе возвращаются товары, не находящиеся в архиве.
     pub fn archived(&mut self) -> &mut Self {
-       let _ = self.archived.insert(true);
+        let _ = self.archived.insert(true);
         self
     }
     pub fn build(&self) -> OfferMappingRequest {
@@ -93,7 +96,7 @@ impl OfferMappingRequestBuilder {
             category_ids: self.category_ids.clone(),
             vendor_names: self.vendor_names.clone(),
             tags: self.tags.clone(),
-            archived: self.archived
+            archived: self.archived,
         }
     }
 }

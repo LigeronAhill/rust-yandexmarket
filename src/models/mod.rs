@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-pub mod sales_managment;
 pub mod campaigns;
 pub mod geobases;
 pub mod offer_cards;
 pub mod offer_mappings;
 pub mod outlets;
+pub mod sales_managment;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum ApiResponseStatusType {

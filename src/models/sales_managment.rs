@@ -77,7 +77,26 @@ pub struct GetPriceWithVatDTO {
 pub struct UpdateCampaignOffersRequest {
     pub offers: Vec<UpdateCampaignOfferDTO>,
 }
-
+/// Изменяет параметры размещения товаров в конкретном магазине: доступность товара, условия доставки и самовывоза, применяемую ставку НДС.
+///
+/// # Example
+///
+/// ```rust
+/// use rust_yandexmarket::{MarketClient, Result, UpdateCampaignOfferDTO};
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     let client = MarketClient::init().await?;
+///     let acc = UpdateCampaignOfferDTO::builder()
+///         .offer_id("Homakoll_164_Prof_1.3")
+///         .available(false)
+///         .min_quantity(5)
+///         .step_quantity(1)
+///         .vat(6)
+///         .build();
+///     client.sales_managment().update_offers(vec![acc]).await?;
+///     Ok(())
+/// }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCampaignOfferDTO {

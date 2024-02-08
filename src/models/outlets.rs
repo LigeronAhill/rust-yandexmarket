@@ -1127,7 +1127,7 @@ fn check_time(time: &String) -> bool {
     let raw: String = time.into();
     let s = raw.split(':').collect::<Vec<&str>>();
     if s.len() != 2 {
-        return false;
+        false
     } else {
         let Some(hours) = s.first() else {
             return false;
@@ -1141,7 +1141,7 @@ fn check_time(time: &String) -> bool {
         let Ok(m) = mins.parse::<i32>() else {
             return false;
         };
-        h >= 0 && h < 24 && m >= 0 && m < 60
+        (0..24).contains(&h) && (0..60).contains(&m)
     }
 }
 /// Информация об условиях доставки для данной точки продаж.
