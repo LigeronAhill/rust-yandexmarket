@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+pub mod sales_managment;
 pub mod campaigns;
 pub mod geobases;
 pub mod offer_cards;

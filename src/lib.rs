@@ -14,5 +14,6 @@ pub use models::outlets::{
     Address, DayOfWeekType, DeliveryRule, Outlet, OutletType, OutletVisibilityType,
     WorkingScheduleItem,
 };
+pub use models::sales_managment::UpdateCampaignOfferDTO;
 
 pub mod models;
