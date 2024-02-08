@@ -8,10 +8,11 @@ mod api_client;
 pub use api_client::{MarketClient, BASE_URL};
 mod methods;
 pub use methods::offer_mapping::{UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+pub use models::offer_cards::{OfferCardRequest, OfferContentDTO};
+pub use models::offer_mappings::{OfferCardStatusType, OfferMappingRequest};
 pub use models::outlets::{
     Address, DayOfWeekType, DeliveryRule, Outlet, OutletType, OutletVisibilityType,
     WorkingScheduleItem,
 };
-pub use models::offer_mappings::{OfferCardStatusType, OfferMappingRequest};
 
-mod models;
+pub mod models;
