@@ -213,7 +213,7 @@ impl StockItemDTO {
     pub fn new(count: i64) -> Self {
         let dt = Local::now();
         let naive_utc = dt.naive_utc();
-        let offset = dt.offset().clone();
+        let offset = *dt.offset();
         let dt_new = chrono::DateTime::<Local>::from_naive_utc_and_offset(naive_utc, offset);
         Self {
             count,

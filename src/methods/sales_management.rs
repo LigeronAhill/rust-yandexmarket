@@ -1,6 +1,6 @@
 use crate::{
     models::{
-        sales_managment::{
+        sales_management::{
             StockRequest, StockResponse, UpdateCampaignOffersRequest, UpdateStockRequest,
             WarehouseOffersDTO,
         },
@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct SalesManagment<'a> {
+pub struct SalesManagement<'a> {
     api_client: &'a MarketClient,
 }
 impl MarketClient {
@@ -34,11 +34,11 @@ impl MarketClient {
     ///     Ok(())
     /// }
     /// ```
-    pub fn sales_managment(&self) -> SalesManagment {
-        SalesManagment { api_client: self }
+    pub fn sales_managment(&self) -> SalesManagement {
+        SalesManagement { api_client: self }
     }
 }
-impl<'a> SalesManagment<'a> {
+impl<'a> SalesManagement<'a> {
     // pub async fn get_offers(&self) -> Result<Vec<GetCampaignOfferDTO>> {
     //     let mut result = Vec::new();
     //     let mut next_page_token = None;

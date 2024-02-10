@@ -6,7 +6,7 @@ async fn main() -> Result<()> {
     let offer_id = "Homakoll_164_Prof_1.3";
     let acc = UpdateCampaignOfferDTO::builder()
         .offer_id(offer_id)
-        .available(true)
+        .available(false)
         .min_quantity(5)
         .step_quantity(1)
         .vat(6)
