@@ -60,12 +60,17 @@ impl MarketClient {
     #[instrument]
     pub async fn init() -> Result<Self> {
         debug!("Initializing MarketClient");
+        static APP_USER_AGENT: &str =
+            concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
         let file_path = "Config.toml";
         let mut file = std::fs::File::open(file_path)?;
         let mut str_val = String::new();
         std::io::Read::read_to_string(&mut file, &mut str_val)?;
         let config: ConfigToml = toml::from_str(&str_val)?;
-        let client = reqwest::Client::builder().gzip(true).build()?;
+        let client = reqwest::Client::builder()
+            .user_agent(APP_USER_AGENT)
+            .gzip(true)
+            .build()?;
         let mut result = MarketClient {
             client,
             access_token: config.config.access_token,

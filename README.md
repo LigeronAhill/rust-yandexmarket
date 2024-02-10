@@ -22,6 +22,9 @@ async fn main() -> Result<()> {
 }
 
 ```
+
+Examples in examples dir
+
 ## Config.toml
 
 ```toml

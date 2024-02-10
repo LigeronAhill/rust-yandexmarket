@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Local, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -164,4 +164,202 @@ impl UpdateCampaignOfferDTOBuilder<WithOfferId> {
             vat: self.vat,
         }
     }
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateStockRequest {
+    pub skus: Vec<StockDTO>,
+}
+/// Передает данные об остатках товаров на витрине.
+/// Обязательно указывайте SKU в точности так, как он указан в каталоге. Например, 557722 и 0557722 — это два разных SKU.
+///
+/// # Example
+///
+/// ```rust
+/// use rust_yandexmarket::{MarketClient, Result, StockDTO, UpdateCampaignOfferDTO};
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     let client = MarketClient::init().await?;
+///     let offer_id = "Homakoll_164_Prof_1.3";
+///     let stock = vec![StockDTO::builder()
+///         .sku(offer_id)
+///         .warehouse_id(78079)
+///         .count(6)
+///         .build()];
+///     client.sales_managment().stock_update(stock).await?;
+///     Ok(())
+/// }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StockDTO {
+    pub sku: String,
+    pub warehouse_id: i64,
+    pub items: Vec<StockItemDTO>,
+}
+impl StockDTO {
+    pub fn builder() -> StockDTOBuilder<NoSku, NoWarehouseId, NoItems> {
+        StockDTOBuilder::default()
+    }
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StockItemDTO {
+    pub count: i64,
+    #[serde(rename = "type")]
+    pub stock_type: StockType,
+    pub updated_at: DateTime<Local>,
+}
+impl StockItemDTO {
+    pub fn new(count: i64) -> Self {
+        let dt = Local::now();
+        let naive_utc = dt.naive_utc();
+        let offset = dt.offset().clone();
+        let dt_new = chrono::DateTime::<Local>::from_naive_utc_and_offset(naive_utc, offset);
+        Self {
+            count,
+            stock_type: StockType::Fit,
+            updated_at: dt_new,
+        }
+    }
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum StockType {
+    Fit,
+    Actual,
+}
+
+#[derive(Default)]
+pub struct NoSku;
+#[derive(Default)]
+pub struct NoWarehouseId;
+#[derive(Default)]
+pub struct NoItems;
+pub struct WithSku(String);
+pub struct WithWarehouseId(i64);
+pub struct WithItems(Vec<StockItemDTO>);
+#[derive(Default)]
+pub struct StockDTOBuilder<S, I, V> {
+    sku: S,
+    warehouse_id: I,
+    items: V,
+}
+impl<S, I, V> StockDTOBuilder<S, I, V> {
+    /// Ваш SKU товара.
+    pub fn sku(self, sku: impl Into<String>) -> StockDTOBuilder<WithSku, I, V> {
+        StockDTOBuilder {
+            sku: WithSku(sku.into()),
+            warehouse_id: self.warehouse_id,
+            items: self.items,
+        }
+    }
+    /// Идентификатор склада.
+    /// Узнать идентификатор склада вы можете в личном кабинете в разделе Логистика → Склады. Он указан в поле ID склада.
+    ///
+    /// Если вы работаете с общими остатками, вы можете посмотреть идентификатор склада в личном кабинете в разделе Настройки → Настройки API в блоке Обновление данных об остатках товаров или с помощью запроса GET businesses/{businessId}/warehouses.
+    pub fn warehouse_id(self, warehouse_id: i64) -> StockDTOBuilder<S, WithWarehouseId, V> {
+        StockDTOBuilder {
+            sku: self.sku,
+            warehouse_id: WithWarehouseId(warehouse_id),
+            items: self.items,
+        }
+    }
+}
+impl<S, I> StockDTOBuilder<S, I, NoItems> {
+    /// Количество доступного товара.
+    pub fn count(self, count: i64) -> StockDTOBuilder<S, I, WithItems> {
+        let items = vec![StockItemDTO::new(count)];
+        StockDTOBuilder {
+            sku: self.sku,
+            warehouse_id: self.warehouse_id,
+            items: WithItems(items),
+        }
+    }
+}
+impl<S, I> StockDTOBuilder<S, I, WithItems> {
+    /// Количество доступного товара.
+    pub fn count(mut self, count: i64) -> Self {
+        let x = self
+            .items
+            .0
+            .first()
+            .get_or_insert(&StockItemDTO::new(0))
+            .count;
+        let c = x + count;
+        self.items.0 = vec![StockItemDTO::new(c)];
+        self
+    }
+}
+impl StockDTOBuilder<WithSku, WithWarehouseId, WithItems> {
+    pub fn build(self) -> StockDTO {
+        StockDTO {
+            sku: self.sku.0,
+            warehouse_id: self.warehouse_id.0,
+            items: self.items.0,
+        }
+    }
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StockRequest {
+    pub with_turnover: Option<bool>,
+    pub archived: Option<bool>,
+    pub offer_ids: Option<Vec<String>>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StockResponse {
+    pub status: Option<ApiResponseStatusType>,
+    pub result: Option<GetWarehouseStocksDTO>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetWarehouseStocksDTO {
+    pub paging: Option<ScrollingPagerDTO>,
+    pub warehouses: Option<Vec<WarehouseOffersDTO>>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WarehouseOffersDTO {
+    pub warehouse_id: i64,
+    pub offers: Vec<WarehouseOfferDTO>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WarehouseOfferDTO {
+    pub offer_id: String,
+    pub turnover_summary: Option<TurnoverDTO>,
+    pub stocks: Option<Vec<WarehouseStockDTO>>,
+    pub updated_at: Option<DateTime<Local>>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TurnoverDTO {
+    pub turnover: TurnoverType,
+    pub turnover_days: Option<f64>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WarehouseStockDTO {
+    #[serde(rename = "type")]
+    pub stock_type: WarehouseStockType,
+    pub count: i64,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum TurnoverType {
+    Low,
+    AlmostLow,
+    High,
+    VeryHigh,
+    NoSales,
+    FreeStore,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum WarehouseStockType {
+    Available,
+    Defect,
+    Expired,
+    Fit,
+    Freeze,
+    Quarantine,
+    Utilization,
 }

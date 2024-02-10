@@ -4,11 +4,10 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Aleksandr Provotorov <provotorov@inbox.ru>"]
 rust-version = "1.75"
-license = "https://github.com/LigeronAhill/rust-yandexmarket/blob/main/LICENSE"
+license = "MIT"
 description = "Библиотека для работы с API Yandex.Market на языке программирования Rust"
 repository = "https://github.com/LigeronAhill/rust-yandexmarket"
 readme = "README.md"
-#readme = "https://github.com/LigeronAhill/rust-yandexmarket/blob/main/README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
