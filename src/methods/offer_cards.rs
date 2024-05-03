@@ -1,9 +1,10 @@
 use crate::models::offer_cards::{
-    CategoryCharactericticsResponse, CategoryParameterDTO, OfferCardDTO, OfferCardResponse,
+    CategoryCharacteristicsResponse, CategoryParameterDTO, OfferCardDTO, OfferCardResponse,
     UpdateOfferCardsRequest,
 };
 use crate::models::ErrorResponse;
-use crate::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+use crate::{MarketClient, OfferCardRequest, OfferContentDTO};
+use anyhow::{anyhow, Result};
 
 #[derive(Debug, Clone)]
 pub struct OfferCards<'a> {
@@ -13,7 +14,8 @@ impl MarketClient {
     /// Возвращает методы для работы с карточками товаров
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -57,7 +59,8 @@ impl<'a> OfferCards<'a> {
     /// ⚙️ Лимит: рассчитывается по формуле суточный лимит товаров — количество товаров в каталоге * 25
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -141,7 +144,7 @@ impl<'a> OfferCards<'a> {
                 _ => {
                     let er_res: ErrorResponse = response.json().await?;
                     let msg = format!("Error: {er_res:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -155,7 +158,8 @@ impl<'a> OfferCards<'a> {
     /// ⚙️ Лимит: рассчитывается по формуле суточный лимит товаров — количество товаров в каталоге * 25
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -243,7 +247,7 @@ impl<'a> OfferCards<'a> {
                 _ => {
                     let er_res: ErrorResponse = response.json().await?;
                     let msg = format!("Error: {er_res:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -253,7 +257,8 @@ impl<'a> OfferCards<'a> {
     ///
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -298,7 +303,7 @@ impl<'a> OfferCards<'a> {
             .await?;
         match response.status() {
             reqwest::StatusCode::OK => {
-                let chars_resp: CategoryCharactericticsResponse = response.json().await?;
+                let chars_resp: CategoryCharacteristicsResponse = response.json().await?;
                 if let Some(res) = chars_resp.result {
                     if let Some(params) = res.parameters {
                         result.extend(params);
@@ -308,7 +313,7 @@ impl<'a> OfferCards<'a> {
             _ => {
                 let er_res: ErrorResponse = response.json().await?;
                 let msg = format!("Error: {er_res:#?}");
-                return Err(msg.into());
+                return Err(anyhow!(msg));
             }
         }
         Ok(result)
@@ -318,7 +323,8 @@ impl<'a> OfferCards<'a> {
     ///
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+    /// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -370,7 +376,7 @@ impl<'a> OfferCards<'a> {
             _ => {
                 let er_res: ErrorResponse = response.json().await?;
                 let msg = format!("Error: {er_res:#?}");
-                Err(msg.into())
+                Err(anyhow!(msg))
             }
         }
     }

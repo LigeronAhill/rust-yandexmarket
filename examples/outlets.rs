@@ -1,4 +1,5 @@
-use rust_yandexmarket::{MarketClient, Result};
+use rust_yandexmarket::MarketClient;
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -27,7 +28,6 @@ async fn main() -> Result<()> {
         .end_time("18:00")
         .build();
     let delivery_rule = rust_yandexmarket::DeliveryRule::builder()
-        .cost(0)
         .min_delivery_days(5)
         .max_delivery_days(7)
         .order_before(15)
@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
         .outlet_type(rust_yandexmarket::OutletType::Retail)
         .coords("20.45, 54.71")
         .is_main(false)
-        .shop_outlet_code("42")
+        .shop_outlet_code("429")
         .visibility(rust_yandexmarket::OutletVisibilityType::Hidden)
         .address(address)
         .phone("+7 (999) 696-69-69")
@@ -50,7 +50,6 @@ async fn main() -> Result<()> {
         .schedule_item(schedule_item_1)
         .schedule_item(schedule_item_2)
         .delivery_rule(delivery_rule)
-        .email("most@wanted.man")
         .storage_period(3)
         .build();
     let created = client.outlets().create_outlet(outlet_to_create).await?;
@@ -58,10 +57,10 @@ async fn main() -> Result<()> {
     println!("{created_outlet:#?}");
     let mut outlet_to_update = created_outlet;
     outlet_to_update.name = "Another name".to_string();
-    let _ = client
+    client
         .outlets()
         .update_outlet(created, outlet_to_update)
         .await?;
-    let _deleted = client.outlets().delete_outlet(created).await?;
+    client.outlets().delete_outlet(created).await?;
     Ok(())
 }

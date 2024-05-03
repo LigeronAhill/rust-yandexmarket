@@ -1,4 +1,5 @@
-use rust_yandexmarket::{MarketClient, Result};
+use rust_yandexmarket::MarketClient;
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {

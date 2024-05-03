@@ -82,7 +82,8 @@ pub struct UpdateCampaignOffersRequest {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result, UpdateCampaignOfferDTO};
+/// use rust_yandexmarket::{MarketClient, UpdateCampaignOfferDTO};
+/// use anyhow::Result;
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
 ///     let client = MarketClient::init().await?;
@@ -93,7 +94,7 @@ pub struct UpdateCampaignOffersRequest {
 ///         .step_quantity(1)
 ///         .vat(6)
 ///         .build();
-///     client.sales_managment().update_offers(vec![acc]).await?;
+///     client.sales_management().update_offers(vec![acc]).await?;
 ///     Ok(())
 /// }
 /// ```
@@ -175,7 +176,8 @@ pub struct UpdateStockRequest {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result, StockDTO, UpdateCampaignOfferDTO};
+/// use rust_yandexmarket::{MarketClient, StockDTO, UpdateCampaignOfferDTO};
+/// use anyhow::Result;
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
 ///     let client = MarketClient::init().await?;
@@ -185,7 +187,7 @@ pub struct UpdateStockRequest {
 ///         .warehouse_id(78079)
 ///         .count(6)
 ///         .build()];
-///     client.sales_managment().stock_update(stock).await?;
+///     client.sales_management().stock_update(stock).await?;
 ///     Ok(())
 /// }
 /// ```
@@ -214,7 +216,7 @@ impl StockItemDTO {
         let dt = Local::now();
         let naive_utc = dt.naive_utc();
         let offset = *dt.offset();
-        let dt_new = chrono::DateTime::<Local>::from_naive_utc_and_offset(naive_utc, offset);
+        let dt_new = DateTime::<Local>::from_naive_utc_and_offset(naive_utc, offset);
         Self {
             count,
             stock_type: StockType::Fit,

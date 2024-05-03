@@ -1,4 +1,5 @@
-use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO};
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {

@@ -5,14 +5,16 @@ use crate::{
         geobases::{RegionDTO, RegionsChildrenResponse, RegionsResponse},
         ErrorResponse,
     },
-    MarketClient, Result,
+    MarketClient,
 };
+use anyhow::{anyhow, Result};
 /// Геобаза
 ///
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -53,7 +55,8 @@ impl<'a> Geobases<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -112,7 +115,7 @@ impl<'a> Geobases<'a> {
                 _ => {
                     let error: ErrorResponse = response.json().await?;
                     let msg = format!("Error while searching region {name} --> \n{error:#?}",);
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -129,7 +132,8 @@ impl<'a> Geobases<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -188,7 +192,7 @@ impl<'a> Geobases<'a> {
                 _ => {
                     let error: ErrorResponse = response.json().await?;
                     let msg = format!("Error while getting region {region_id} --> \n{error:#?}",);
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -205,7 +209,8 @@ impl<'a> Geobases<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -258,7 +263,7 @@ impl<'a> Geobases<'a> {
                     let error: ErrorResponse = response.json().await?;
                     let msg =
                         format!("Error while getting campaigns with page {page} --> \n{error:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -271,7 +276,8 @@ impl MarketClient {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -300,13 +306,14 @@ impl MarketClient {
 }
 #[cfg(test)]
 mod tests {
-    use crate::{MarketClient, Result};
+    use crate::MarketClient;
+    use anyhow::{anyhow, Result};
     #[tokio::test]
     async fn test_region() -> Result<()> {
         let client = MarketClient::init().await?;
         let regions = client.geobases().search_region("тамбов").await?;
         assert!(!regions.is_empty());
-        let region_id = regions.first().ok_or("regions is empty")?.id;
+        let region_id = regions.first().ok_or(anyhow!("regions is empty"))?.id;
         let region = client.geobases().get_region(region_id).await?;
         assert!(!region.is_empty());
         let childrens = client.geobases().get_children_regions(region_id).await?;

@@ -12,8 +12,9 @@ use crate::{
         },
         ApiResponseStatusType, ErrorResponse,
     },
-    MarketClient, OfferMappingRequest, Result,
+    MarketClient, OfferMappingRequest,
 };
+use anyhow::{anyhow, Result};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[skip_serializing_none]
@@ -25,7 +26,8 @@ pub struct UpdatePricesRequest {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+/// use rust_yandexmarket::{MarketClient, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -118,7 +120,8 @@ pub struct UnarchiveOffersDTO {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+/// use rust_yandexmarket::{MarketClient, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -197,7 +200,7 @@ pub struct BasePriceDTO {
 
 impl UpdateOfferMappingDTOBuilder {
     /// Ваш SKU — идентификатор товара в вашей системе.
-    /// Разрешена любая последовательность длиной до 80 знаков. В нее могут входить английские и русские буквы, цифры и символы . , / \ ( ) [ ] - = _
+    /// Разрешена любая последовательность длиной до 80 знаков. В нее могут входить английские и русские буквы, цифры и символы. , / \ () [ ] - = _
     /// Правила использования SKU:
     /// У каждого товара SKU должен быть свой.
     /// SKU товара нельзя менять — можно только удалить товар и добавить заново с новым SKU.
@@ -559,7 +562,7 @@ impl UpdateOfferMappingDTOBuilder {
     }
     pub fn build(&self) -> Result<UpdateOfferMappingDTO> {
         if self.offer.offer_id.is_empty() {
-            Err("offer_id required!".into())
+            Err(anyhow!("offer_id required!"))
         } else {
             Ok(UpdateOfferMappingDTO {
                 offer: self.offer.to_owned(),
@@ -582,7 +585,8 @@ impl MarketClient {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -640,7 +644,8 @@ impl<'a> OfferMapping<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -693,7 +698,7 @@ impl<'a> OfferMapping<'a> {
                 _ => {
                     let error: ErrorResponse = response.json().await?;
                     let msg = format!("Error while getting offer-mappings\n{error:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg))
                 }
             }
         }
@@ -702,7 +707,8 @@ impl<'a> OfferMapping<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, OfferMappingRequest, Result};
+    /// use rust_yandexmarket::{MarketClient, OfferMappingRequest};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -766,7 +772,7 @@ impl<'a> OfferMapping<'a> {
                 _ => {
                     let error: ErrorResponse = response.json().await?;
                     let msg = format!("Error while getting offer-mappings\n{error:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -797,7 +803,8 @@ impl<'a> OfferMapping<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateOfferMappingDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateOfferMappingDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -852,7 +859,7 @@ impl<'a> OfferMapping<'a> {
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(errors.into())
+            Err(anyhow!(errors))
         }
     }
     /// Удаляет товары из каталога.
@@ -862,7 +869,8 @@ impl<'a> OfferMapping<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateOfferMappingDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateOfferMappingDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -920,7 +928,7 @@ impl<'a> OfferMapping<'a> {
         if errors.is_empty() {
             Ok(result)
         } else {
-            Err(errors.into())
+            Err(anyhow!(errors))
         }
     }
     /// Установка цен
@@ -928,7 +936,8 @@ impl<'a> OfferMapping<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -981,7 +990,7 @@ impl<'a> OfferMapping<'a> {
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(errors.into())
+            Err(anyhow!(errors))
         }
     }
     /// Помещает товары в архив. Товары, помещенные в архив, скрыты с витрины во всех магазинах кабинета.
@@ -993,7 +1002,8 @@ impl<'a> OfferMapping<'a> {
     /// ⚙️ Лимит: 5000 товаров в минуту, не более 200 товаров в одном запросе
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -1049,7 +1059,7 @@ impl<'a> OfferMapping<'a> {
         if errors.is_empty() {
             Ok(result)
         } else {
-            Err(errors.into())
+            Err(anyhow!(errors))
         }
     }
     /// Восстанавливает товары из архива.
@@ -1057,7 +1067,8 @@ impl<'a> OfferMapping<'a> {
     /// ⚙️ Лимит: 5000 товаров в минуту, не более 200 товаров в одном запросе
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -1113,7 +1124,7 @@ impl<'a> OfferMapping<'a> {
         if errors.is_empty() {
             Ok(result)
         } else {
-            Err(errors.into())
+            Err(anyhow!(errors))
         }
     }
 }

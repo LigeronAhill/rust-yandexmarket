@@ -1,17 +1,16 @@
-use crate::models::{FlippingPagerDTO, ScrollingPagerDTO};
-use crate::Result;
+use anyhow::Result;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-use super::{geobases::RegionDTO, ApiResponseStatusType};
+use crate::models::{FlippingPagerDTO, ScrollingPagerDTO};
+
+use super::{ApiResponseStatusType, geobases::RegionDTO};
 
 /// Информация об условиях доставки для данной точки продаж.
 #[serde_with::skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OutletDeliveryRuleDTO {
-    /// Стоимость самовывоза из точки продаж.
-    pub cost: i64,
     /// Минимальный срок доставки товаров в точку продаж. Указан в рабочих днях.
     /// Минимальное значение: `0` — доставка в день заказа. Максимальное значение: `60`.
     /// Допустимые сроки доставки (разница между `minDeliveryDays` и `maxDeliveryDays`)
@@ -66,7 +65,7 @@ pub struct OutletWorkingScheduleItemDTO {
     pub start_day: DayOfWeekType,
     /// Точка продаж работает до указанного дня недели
     pub end_day: DayOfWeekType,
-    /// Точка продаж работает c указанного часа. Формат: `ЧЧ:ММ`.
+    /// Точка продаж работает с указанного часа. Формат: `ЧЧ:ММ`.
     pub start_time: String,
     /// Точка продаж работает до указанного часа. Формат: `ЧЧ:ММ`.
     pub end_time: String,
@@ -125,7 +124,8 @@ pub struct OutletResponse {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -173,10 +173,6 @@ pub struct FullOutletDTO {
     /// Информация об условиях доставки для данной точки продаж. Обязательный параметр,
     /// если параметр `type=DEPOT` или `type=MIXED`.
     pub delivery_rules: Vec<OutletDeliveryRuleDTO>,
-    /// Адрес электронной почты точки продаж. Может содержать только один параметр email.
-    /// Адрес электронной почты точки продаж. Допускается любой адрес электронной почты,
-    /// соответствующий стандарту RFC 2822. Выводится в виде строки.
-    pub emails: Vec<String>,
     /// Срок хранения заказа в собственном пункте выдачи заказов. Считается в днях.
     pub storage_period: i64,
     /// Идентификатор точки продаж, присвоенный Яндекс Маркетом.
@@ -341,7 +337,8 @@ pub struct OutletResponseDTO {
 ///
 /// ```rust
 ///
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -370,7 +367,6 @@ pub struct OutletResponseDTO {
 ///         .end_time("18:00")
 ///         .build();
 ///     let delivery_rule = rust_yandexmarket::DeliveryRule::builder()
-///         .cost(0)
 ///         .min_delivery_days(5)
 ///         .max_delivery_days(7)
 ///         .order_before(15)
@@ -393,7 +389,6 @@ pub struct OutletResponseDTO {
 ///         .schedule_item(schedule_item_1)
 ///         .schedule_item(schedule_item_2)
 ///         .delivery_rule(delivery_rule)
-///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
 ///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
@@ -416,7 +411,8 @@ impl DeliveryRule {
 ///
 /// ```rust
 ///
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -445,7 +441,6 @@ impl DeliveryRule {
 ///         .end_time("18:00")
 ///         .build();
 ///     let delivery_rule = rust_yandexmarket::DeliveryRule::builder()
-///         .cost(0)
 ///         .min_delivery_days(5)
 ///         .max_delivery_days(7)
 ///         .order_before(15)
@@ -468,7 +463,6 @@ impl DeliveryRule {
 ///         .schedule_item(schedule_item_1)
 ///         .schedule_item(schedule_item_2)
 ///         .delivery_rule(delivery_rule)
-///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
 ///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
@@ -491,7 +485,8 @@ impl WorkingScheduleItem {
 ///
 /// ```rust
 ///
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -543,7 +538,6 @@ impl WorkingScheduleItem {
 ///         .schedule_item(schedule_item_1)
 ///         .schedule_item(schedule_item_2)
 ///         .delivery_rule(delivery_rule)
-///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
 ///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
@@ -565,7 +559,8 @@ impl Address {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -594,7 +589,6 @@ impl Address {
 ///         .end_time("18:00")
 ///         .build();
 ///     let delivery_rule = rust_yandexmarket::DeliveryRule::builder()
-///         .cost(0)
 ///         .min_delivery_days(5)
 ///         .max_delivery_days(7)
 ///         .order_before(15)
@@ -617,7 +611,6 @@ impl Address {
 ///         .schedule_item(schedule_item_1)
 ///         .schedule_item(schedule_item_2)
 ///         .delivery_rule(delivery_rule)
-///         .email("most@wanted.man")
 ///         .storage_period(3)
 ///         .build();
 ///     // let created = client.outlets().create_outlet(outlet_to_create).await?;
@@ -649,7 +642,6 @@ impl Outlet {
             phones: NoPhones,
             working_schedule: NoWorkingSchedule,
             delivery_rules: None,
-            emails: None,
             storage_period: None,
         }
     }
@@ -669,7 +661,6 @@ pub struct CreateOutletDTO {
     phones: Vec<String>,
     working_schedule: OutletWorkingScheduleDTO,
     delivery_rules: Option<Vec<OutletDeliveryRuleDTO>>,
-    emails: Option<Vec<String>>,
     storage_period: Option<i64>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -704,7 +695,6 @@ pub struct CreateOutletDTOBuilder<N, O, A, P, W> {
     phones: P,
     working_schedule: W,
     delivery_rules: Option<Vec<OutletDeliveryRuleDTO>>,
-    emails: Option<Vec<String>>,
     storage_period: Option<i64>,
 }
 impl<N, O, A, P, W> CreateOutletDTOBuilder<N, O, A, P, W> {
@@ -721,7 +711,6 @@ impl<N, O, A, P, W> CreateOutletDTOBuilder<N, O, A, P, W> {
             phones: self.phones,
             working_schedule: self.working_schedule,
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
@@ -741,7 +730,6 @@ impl<N, O, A, P, W> CreateOutletDTOBuilder<N, O, A, P, W> {
             phones: self.phones,
             working_schedule: self.working_schedule,
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
@@ -792,7 +780,6 @@ impl<N, O, A, P, W> CreateOutletDTOBuilder<N, O, A, P, W> {
             phones: self.phones,
             working_schedule: self.working_schedule,
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
@@ -809,7 +796,6 @@ impl<N, O, A, P, W> CreateOutletDTOBuilder<N, O, A, P, W> {
             phones: WithPhones(phones),
             working_schedule: self.working_schedule,
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
@@ -819,13 +805,6 @@ impl<N, O, A, P, W> CreateOutletDTOBuilder<N, O, A, P, W> {
         self.delivery_rules
             .get_or_insert(vec![])
             .push(delivery_rule);
-        self
-    }
-    /// Адрес электронной почты точки продаж. Может содержать только один параметр email.
-    /// Адрес электронной почты точки продаж. Допускается любой адрес электронной почты,
-    /// соответствующий стандарту RFC 2822. Выводится в виде строки.
-    pub fn email(mut self, email: impl Into<String>) -> Self {
-        self.emails.get_or_insert(vec![]).push(email.into());
         self
     }
     /// Срок хранения заказа в собственном пункте выдачи заказов. Считается в днях.
@@ -849,7 +828,6 @@ impl
             phones: self.phones.0,
             working_schedule: self.working_schedule.0,
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
@@ -951,7 +929,7 @@ impl OutletAddressDTOBuilder<WithRegionId> {
     }
 }
 impl<N, O, A, W> CreateOutletDTOBuilder<N, O, A, NoPhones, W> {
-    /// Номер телефонa точки продаж. Передавайте в формате: `+7 (999) 999-99-99`.
+    /// Номер телефона точки продаж. Передавайте в формате: `+7 (999) 999-99-99`.
     pub fn phone(self, phone: impl Into<String>) -> CreateOutletDTOBuilder<N, O, A, WithPhones, W> {
         CreateOutletDTOBuilder {
             name: self.name,
@@ -964,13 +942,12 @@ impl<N, O, A, W> CreateOutletDTOBuilder<N, O, A, NoPhones, W> {
             phones: WithPhones(vec![phone.into()]),
             working_schedule: self.working_schedule,
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
 }
 impl<N, O, A, W> CreateOutletDTOBuilder<N, O, A, WithPhones, W> {
-    /// Номер телефонa точки продаж. Передавайте в формате: `+7 (999) 999-99-99`.
+    /// Номер телефона точки продаж. Передавайте в формате: `+7 (999) 999-99-99`.
     pub fn phone(mut self, phone: impl Into<String>) -> Self {
         self.phones.0.push(phone.into());
         self
@@ -999,7 +976,6 @@ impl<N, O, A, P> CreateOutletDTOBuilder<N, O, A, P, NoWorkingSchedule> {
             phones: self.phones,
             working_schedule: WithWorkingSchedule(w),
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
@@ -1023,7 +999,6 @@ impl<N, O, A, P> CreateOutletDTOBuilder<N, O, A, P, NoWorkingSchedule> {
             phones: self.phones,
             working_schedule: WithWorkingSchedule(w),
             delivery_rules: self.delivery_rules,
-            emails: self.emails,
             storage_period: self.storage_period,
         }
     }
@@ -1062,7 +1037,7 @@ impl OutletWorkingScheduleItemDTOBuilder {
         let _ = self.end_day.insert(end_day);
         self
     }
-    /// Точка продаж работает c указанного часа. Формат: `ЧЧ:ММ`.
+    /// Точка продаж работает с указанного часа. Формат: `ЧЧ:ММ`.
     pub fn start_time(mut self, start_time: impl Into<String>) -> Self {
         let t = start_time.into();
         let time = if check_time(&t) {
@@ -1147,7 +1122,6 @@ fn check_time(time: &String) -> bool {
 /// Информация об условиях доставки для данной точки продаж.
 #[derive(Default)]
 pub struct OutletDeliveryRuleDTOBuilder {
-    cost: Option<i64>,
     min_delivery_days: Option<i64>,
     max_delivery_days: Option<i64>,
     delivery_service_id: Option<i64>,
@@ -1156,11 +1130,6 @@ pub struct OutletDeliveryRuleDTOBuilder {
     unspecified_delivery_interval: Option<bool>,
 }
 impl OutletDeliveryRuleDTOBuilder {
-    /// Стоимость самовывоза из точки продаж.
-    pub fn cost(mut self, cost: i64) -> Self {
-        let _ = self.cost.insert(cost);
-        self
-    }
     /// Минимальный срок доставки товаров в точку продаж. Указан в рабочих днях.
     /// Минимальное значение: `0` — доставка в день заказа. Максимальное значение: `60`.
     /// Допустимые сроки доставки (разница между `minDeliveryDays` и `maxDeliveryDays`)
@@ -1227,12 +1196,7 @@ impl OutletDeliveryRuleDTOBuilder {
         self
     }
     pub fn build(self) -> Result<OutletDeliveryRuleDTO> {
-        let Some(cost) = self.cost else {
-            return Err("Cost required!".into());
-        };
-
         Ok(OutletDeliveryRuleDTO {
-            cost,
             min_delivery_days: self.min_delivery_days,
             max_delivery_days: self.max_delivery_days,
             delivery_service_id: self.delivery_service_id,
@@ -1245,6 +1209,7 @@ impl OutletDeliveryRuleDTOBuilder {
 #[cfg(test)]
 mod tests {
     use super::check_time;
+
     #[test]
     fn test_check_time() {
         let right_time = "10:00".to_string();

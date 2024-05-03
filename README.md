@@ -12,7 +12,8 @@ rust-yandexmarket = "0.1.0"
 ## Examples
 
 ```rust
-use rust_yandexmarket::{MarketClient, Result};
+use rust_yandexmarket::MarketClient;
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -25,8 +26,9 @@ async fn main() -> Result<()> {
 
 ```rust
 use rust_yandexmarket::{
-    MarketClient, OfferMappingRequest, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO,
+    MarketClient, OfferMappingRequest, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO,
 };
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {

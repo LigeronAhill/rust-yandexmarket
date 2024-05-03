@@ -8,8 +8,10 @@ use crate::{
         },
         ErrorResponse,
     },
-    MarketClient, Result,
+    MarketClient,
 };
+use anyhow::{anyhow, Result};
+
 #[derive(Debug, Clone)]
 pub struct Outlets<'a> {
     api_client: &'a MarketClient,
@@ -23,13 +25,14 @@ impl<'a> Outlets<'a> {
     ///
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
-    ///     // let outlets = client.outlets().get_all_outlets().await?;
+    ///     let outlets = client.outlets().get_all_outlets().await?;
     ///     // do something...
     ///     Ok(())
     /// }
@@ -42,7 +45,7 @@ impl<'a> Outlets<'a> {
             let uri = match next_page_token {
                 Some(s) => {
                     format!(
-                        "{}campaigns/{}/outlets?nextPageToken={s}",
+                        "{}campaigns/{}/outlets?page_token={s}",
                         crate::BASE_URL,
                         self.api_client.campaign_id()
                     )
@@ -76,7 +79,7 @@ impl<'a> Outlets<'a> {
                     let error: ErrorResponse = response.json().await?;
                     let msg =
                         format!("Error while getting outlets with uri {uri} --> \n{error:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -91,13 +94,15 @@ impl<'a> Outlets<'a> {
     ///
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
-    ///     // let outlet = client.outlets().get_outlet(outlet_id).await?;
+    ///     let outlet_id = 42;
+    ///     let outlet = client.outlets().get_outlet(outlet_id).await?;
     ///     // do something...
     ///     Ok(())
     /// }
@@ -126,7 +131,7 @@ impl<'a> Outlets<'a> {
                 let error: ErrorResponse = response.json().await?;
                 let msg =
                     format!("Error while getting outlet with id {outlet_id} --> \n{error:#?}");
-                return Err(msg.into());
+                return Err(anyhow!(msg));
             }
         }
     }
@@ -139,7 +144,8 @@ impl<'a> Outlets<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -218,9 +224,11 @@ impl<'a> Outlets<'a> {
                 Ok(res.result.id)
             }
             _ => {
-                let err: ErrorResponse = response.json().await?;
-                let msg = format!("Error creating outlet\n{err:#?}");
-                Err(msg.into())
+                // let err: ErrorResponse = response.json().await?;
+                // let msg = format!("Error creating outlet\n{err:#?}");
+                // Err(anyhow!(msg))
+                let err: serde_json::Value = response.json().await?;
+                Err(anyhow!(err.to_string()))
             }
         }
     }
@@ -232,14 +240,15 @@ impl<'a> Outlets<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     tracing_subscriber::fmt::init();
     ///     let client = MarketClient::init().await?;
     ///     let outlets = client.outlets().get_all_outlets().await?;
-    ///     let mut outlet_to_update = outlets.first().unwrap();
+    ///     let mut outlet_to_update = outlets.first().unwrap().clone();
     ///     outlet_to_update.name = "Another name".to_string();
     ///     // client
     ///     //     .outlets()
@@ -270,7 +279,7 @@ impl<'a> Outlets<'a> {
             _ => {
                 let err: ErrorResponse = response.json().await?;
                 let msg = format!("Error updating outlet\n{err:#?}");
-                Err(msg.into())
+                Err(anyhow!(msg))
             }
         }
     }
@@ -282,7 +291,8 @@ impl<'a> Outlets<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -312,7 +322,7 @@ impl<'a> Outlets<'a> {
             _ => {
                 let err: ErrorResponse = response.json().await?;
                 let msg = format!("Error deleting outlet\n{err:#?}");
-                Err(msg.into())
+                Err(anyhow!(msg))
             }
         }
     }
@@ -325,7 +335,8 @@ impl<'a> Outlets<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -359,7 +370,7 @@ impl<'a> Outlets<'a> {
             _ => {
                 let err: ErrorResponse = response.json().await?;
                 let msg = format!("Error getting licenses\n{err:#?}");
-                Err(msg.into())
+                Err(anyhow!(msg))
             }
         }
     }
@@ -378,7 +389,8 @@ impl MarketClient {
     /// Точки продаж    
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -396,7 +408,7 @@ impl MarketClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Result;
+    use anyhow::Result;
     #[tokio::test]
     async fn test_get_all_outlets() -> Result<()> {
         let client = MarketClient::init().await?;
@@ -434,7 +446,6 @@ mod tests {
             .end_time("18:00")
             .build();
         let delivery_rule = crate::DeliveryRule::builder()
-            .cost(0)
             .min_delivery_days(5)
             .max_delivery_days(7)
             .order_before(15)
@@ -444,7 +455,7 @@ mod tests {
             .outlet_type(crate::OutletType::Retail)
             .coords("20.45, 54.71")
             .is_main(false)
-            .shop_outlet_code("42")
+            .shop_outlet_code("429")
             .visibility(crate::OutletVisibilityType::Hidden)
             .address(address)
             .phone("+7 (999) 696-69-69")
@@ -457,7 +468,6 @@ mod tests {
             .schedule_item(schedule_item_1)
             .schedule_item(schedule_item_2)
             .delivery_rule(delivery_rule)
-            .email("most@wanted.man")
             .storage_period(3)
             .build();
         let created = client.outlets().create_outlet(outlet_to_create).await?;

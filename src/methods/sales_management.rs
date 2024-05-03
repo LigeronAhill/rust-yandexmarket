@@ -6,8 +6,9 @@ use crate::{
         },
         ErrorResponse,
     },
-    MarketClient, Result, StockDTO, UpdateCampaignOfferDTO,
+    MarketClient, StockDTO, UpdateCampaignOfferDTO,
 };
+use anyhow::{anyhow, Result};
 
 #[derive(Debug, Clone)]
 pub struct SalesManagement<'a> {
@@ -19,7 +20,8 @@ impl MarketClient {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateCampaignOfferDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateCampaignOfferDTO};
+    /// use anyhow::Result;
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     let client = MarketClient::init().await?;
@@ -30,11 +32,11 @@ impl MarketClient {
     ///         .step_quantity(1)
     ///         .vat(6)
     ///         .build();
-    ///     client.sales_managment().update_offers(vec![acc]).await?;
+    ///     client.sales_management().update_offers(vec![acc]).await?;
     ///     Ok(())
     /// }
     /// ```
-    pub fn sales_managment(&self) -> SalesManagement {
+    pub fn sales_management(&self) -> SalesManagement {
         SalesManagement { api_client: self }
     }
 }
@@ -101,11 +103,12 @@ impl<'a> SalesManagement<'a> {
     //     }
     //     Ok(result)
     // }
-    /// Настройка размещения товаров в магазине
+    /// Настройка размещения товаров в магазине.
     /// Изменяет параметры размещения товаров в конкретном магазине: доступность товара, условия доставки и самовывоза, применяемую ставку НДС.
     /// # Example
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, UpdateCampaignOfferDTO};
+    /// use rust_yandexmarket::{MarketClient, UpdateCampaignOfferDTO};
+    /// use anyhow::Result;
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     let client = MarketClient::init().await?;
@@ -116,7 +119,7 @@ impl<'a> SalesManagement<'a> {
     ///         .step_quantity(1)
     ///         .vat(6)
     ///         .build();
-    ///     client.sales_managment().update_offers(vec![acc]).await?;
+    ///     client.sales_management().update_offers(vec![acc]).await?;
     ///     Ok(())
     /// }
     /// ```
@@ -152,7 +155,7 @@ impl<'a> SalesManagement<'a> {
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(errors.into())
+            Err(anyhow!( errors ))
         }
     }
     /// Передает данные об остатках товаров на витрине.
@@ -167,7 +170,8 @@ impl<'a> SalesManagement<'a> {
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, StockDTO, UpdateCampaignOfferDTO};
+    /// use rust_yandexmarket::{MarketClient, StockDTO, UpdateCampaignOfferDTO};
+    /// use anyhow::Result;
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     let client = MarketClient::init().await?;
@@ -178,7 +182,7 @@ impl<'a> SalesManagement<'a> {
     ///         .count(6)
     ///         .count(3)
     ///         .build()];
-    ///     client.sales_managment().stock_update(stock).await?;
+    ///     client.sales_management().stock_update(stock).await?;
     ///     Ok(())
     /// }
     /// ```
@@ -213,25 +217,26 @@ impl<'a> SalesManagement<'a> {
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(errors.into())
+            Err(anyhow!(errors))
         }
     }
-    /// Информация об остатках и оборачиваемости
+    /// Информация об остатках и оборачиваемости.
     /// Возвращает данные об остатках товаров (для моделей FBY, FBS и Экспресс) и об оборачиваемости товаров (для модели FBY).
     ///
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, StockDTO, UpdateCampaignOfferDTO};
+    /// use rust_yandexmarket::{MarketClient, StockDTO, UpdateCampaignOfferDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     let client = MarketClient::init().await?;
     ///     let offer_id = "Homakoll_164_Prof_1.3";
-    ///     let stock = client.sales_managment().retrieve_stock().await?;
+    ///     let stock = client.sales_management().retrieve_stock().await?;
     ///     dbg!(stock);
     ///     let filtered_stock = client
-    ///         .sales_managment()
+    ///         .sales_management()
     ///         .retrieve_stock_with_ids(vec![offer_id.to_string()])
     ///         .await?;
     ///     dbg!(filtered_stock);
@@ -298,28 +303,29 @@ impl<'a> SalesManagement<'a> {
                 _ => {
                     let r: serde_json::Value = response.json().await?;
                     let msg = format!("{r:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
         Ok(result)
     }
-    /// Информация об остатках и оборачиваемости
+    /// Информация об остатках и оборачиваемости.
     /// Возвращает данные об остатках товаров (для моделей FBY, FBS и Экспресс) и об оборачиваемости товаров (для модели FBY).
     ///
     /// # Example
     ///
     /// ```rust
-    /// use rust_yandexmarket::{MarketClient, Result, StockDTO, UpdateCampaignOfferDTO};
+    /// use rust_yandexmarket::{MarketClient, StockDTO, UpdateCampaignOfferDTO};
+    /// use anyhow::Result;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     let client = MarketClient::init().await?;
     ///     let offer_id = "Homakoll_164_Prof_1.3";
-    ///     let stock = client.sales_managment().retrieve_stock().await?;
+    ///     let stock = client.sales_management().retrieve_stock().await?;
     ///     dbg!(stock);
     ///     let filtered_stock = client
-    ///         .sales_managment()
+    ///         .sales_management()
     ///         .retrieve_stock_with_ids(vec![offer_id.to_string()])
     ///         .await?;
     ///     dbg!(filtered_stock);
@@ -364,7 +370,7 @@ impl<'a> SalesManagement<'a> {
             _ => {
                 let er_res: ErrorResponse = response.json().await?;
                 let msg = format!("Error: {er_res:#?}");
-                Err(msg.into())
+                Err(anyhow!(msg))
             }
         }
     }

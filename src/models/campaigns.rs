@@ -21,7 +21,8 @@ pub struct SettingsResponse {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -153,7 +154,8 @@ pub struct CampaignsResponse {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {

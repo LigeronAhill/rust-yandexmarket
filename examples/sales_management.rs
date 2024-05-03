@@ -1,4 +1,5 @@
-use rust_yandexmarket::{MarketClient, Result, StockDTO, UpdateCampaignOfferDTO};
+use rust_yandexmarket::{MarketClient, StockDTO, UpdateCampaignOfferDTO};
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -11,18 +12,18 @@ async fn main() -> Result<()> {
         .step_quantity(1)
         .vat(6)
         .build();
-    client.sales_managment().update_offers(vec![acc]).await?;
+    client.sales_management().update_offers(vec![acc]).await?;
     let stock = vec![StockDTO::builder()
         .sku(offer_id)
         .warehouse_id(78079)
         .count(6)
         .count(3)
         .build()];
-    client.sales_managment().stock_update(stock).await?;
-    let stock = client.sales_managment().retrieve_stock().await?;
+    client.sales_management().stock_update(stock).await?;
+    let stock = client.sales_management().retrieve_stock().await?;
     dbg!(stock);
     let filtered_stock = client
-        .sales_managment()
+        .sales_management()
         .retrieve_stock_with_ids(vec![offer_id.to_string()])
         .await?;
     dbg!(filtered_stock);

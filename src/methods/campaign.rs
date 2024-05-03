@@ -8,8 +8,9 @@ use crate::{
         },
         ErrorResponse,
     },
-    MarketClient, Result,
+    MarketClient,
 };
+use anyhow::{anyhow, Result};
 #[derive(Debug, Clone)]
 pub struct Campaigns<'a> {
     api_client: &'a MarketClient,
@@ -47,7 +48,7 @@ impl<'a> Campaigns<'a> {
                 let error: ErrorResponse = response.json().await?;
                 let msg =
                     format!("Error while getting campaign with id {campaign_id} --> \n{error:#?}");
-                return Err(msg.into());
+                return Err(anyhow!(msg));
             }
         }
     }
@@ -72,7 +73,7 @@ impl<'a> Campaigns<'a> {
                 let error: ErrorResponse = response.json().await?;
                 let msg =
                     format!("Error while getting campaign with id {campaign_id} --> \n{error:#?}");
-                return Err(msg.into());
+                return Err(anyhow!(msg));
             }
         }
     }
@@ -104,7 +105,7 @@ impl<'a> Campaigns<'a> {
                 let error: ErrorResponse = response.json().await?;
                 let msg =
                     format!("Error while getting campaign with id {campaign_id} --> \n{error:#?}");
-                return Err(msg.into());
+                return Err(anyhow!(msg));
             }
         }
     }
@@ -139,7 +140,7 @@ impl<'a> Campaigns<'a> {
                     let error: ErrorResponse = response.json().await?;
                     let msg =
                         format!("Error while getting campaigns with page {page} --> \n{error:#?}");
-                    return Err(msg.into());
+                    return Err(anyhow!(msg));
                 }
             }
         }
@@ -152,7 +153,8 @@ impl MarketClient {
     /// # Example
     ///
     /// ```rust
-    ///use rust_yandexmarket::{MarketClient, Result};
+    ///use rust_yandexmarket::MarketClient;
+    ///use anyhow::Result;
     ///
     ///#[tokio::main]
     ///async fn main() -> Result<()> {
@@ -175,7 +177,8 @@ impl MarketClient {
 }
 #[cfg(test)]
 mod tests {
-    use crate::{MarketClient, Result};
+    use crate::MarketClient;
+    use anyhow::Result;
     #[tokio::test]
     async fn test_get_all_campaigns() -> Result<()> {
         let client = MarketClient::init().await?;

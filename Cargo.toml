@@ -20,6 +20,7 @@ serde_with = "3.6.0"
 tokio = { version = "1.35.1", features = ["full"] }
 toml = "0.8.8"
 tracing = { version = "0.1.40", features = ["attributes"] }
+anyhow = "1.0.82"
 
 [dev-dependencies]
 tracing-subscriber = "0.3.18"

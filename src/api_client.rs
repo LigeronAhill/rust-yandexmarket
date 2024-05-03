@@ -1,6 +1,6 @@
 use tracing::{debug, instrument};
 
-use crate::Result;
+use anyhow::{anyhow, Result};
 pub const BASE_URL: &str = "https://api.partner.market.yandex.ru/";
 
 #[derive(Debug, serde::Deserialize)]
@@ -17,7 +17,8 @@ struct ConfigToml {
 /// # Example
 ///
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, Result};
+/// use rust_yandexmarket::MarketClient;
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -41,7 +42,8 @@ impl MarketClient {
     /// # Examples
     ///
     /// ```
-    /// use rust_yandexmarket::{MarketClient, Result};
+    /// use rust_yandexmarket::MarketClient;
+    /// use anyhow::Result;
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     let market_client = MarketClient::init().await?;
@@ -80,7 +82,7 @@ impl MarketClient {
         };
         let campaigns = result.campaigns().get_all_campaigns().await?;
         let Some(campaign) = campaigns.first() else {
-            return Err("No campaigns found".into());
+            return Err(anyhow!("No campaigns found"));
         };
         result.campaign_id = campaign.id;
         result.business_id = campaign.business.id;
@@ -103,7 +105,7 @@ impl MarketClient {
         };
         let campaigns = result.campaigns().get_all_campaigns().await?;
         let Some(campaign) = campaigns.first() else {
-            return Err("No campaigns found".into());
+            return Err(anyhow!("No campaigns found"));
         };
         result.campaign_id = campaign.id;
         result.business_id = campaign.business.id;
@@ -124,7 +126,7 @@ impl MarketClient {
         };
         let campaigns = result.campaigns().get_all_campaigns().await?;
         let Some(campaign) = campaigns.first() else {
-            return Err("No campaigns found".into());
+            return Err(anyhow!("No campaigns found"));
         };
         result.campaign_id = campaign.id;
         result.business_id = campaign.business.id;

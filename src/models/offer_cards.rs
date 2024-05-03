@@ -34,7 +34,7 @@ impl OfferCardRequestBuilder {
         self.offer_ids.get_or_insert(vec![]).extend(offer_ids);
         self
     }
-    /// Идентификаторы товаров, информация о которых нужна.
+    /// Идентификатор товара, информация о котором нужна.
     pub fn offer_id(&mut self, offer_id: impl Into<String>) -> &mut Self {
         self.offer_ids.get_or_insert(vec![]).push(offer_id.into());
         self
@@ -117,7 +117,7 @@ pub enum OfferCardRecommendationType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CategoryCharactericticsResponse {
+pub struct CategoryCharacteristicsResponse {
     pub status: Option<ApiResponseStatusType>,
     pub result: Option<CategoryContentParametersDTO>,
 }
@@ -145,7 +145,7 @@ pub struct CategoryParameterDTO {
     pub allow_custom_values: bool,
     pub values: Option<Vec<ParameterValueOptionDTO>>,
     pub constraints: Option<ParameterValueConstraintsDTO>,
-    pub value_restrictuins: Option<Vec<ValueRestrictionDTO>>,
+    pub value_restrictions: Option<Vec<ValueRestrictionDTO>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -193,7 +193,8 @@ pub struct UpdateOfferCardsRequest {
 ///
 /// # Example
 /// ```rust
-/// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO, Result};
+/// use rust_yandexmarket::{MarketClient, OfferCardRequest, OfferContentDTO};
+/// use anyhow::Result;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {

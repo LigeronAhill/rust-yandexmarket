@@ -1,6 +1,7 @@
 use rust_yandexmarket::{
-    MarketClient, OfferMappingRequest, Result, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO,
+    MarketClient, OfferMappingRequest, UpdateBusinessOfferPriceDTO, UpdateOfferMappingDTO,
 };
+use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
