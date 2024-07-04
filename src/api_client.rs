@@ -1,17 +1,14 @@
-use tracing::{debug, instrument};
+use std::fmt::Debug;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
+use reqwest::header::{ACCEPT, HeaderMap};
+use tracing::{debug, instrument};
+use url::Url;
+
+use crate::models::CampaignDto;
+
 pub const BASE_URL: &str = "https://api.partner.market.yandex.ru/";
 
-#[derive(Debug, serde::Deserialize)]
-struct Config {
-    access_token: String,
-    check_token: String,
-}
-#[derive(Debug, serde::Deserialize)]
-struct ConfigToml {
-    config: Config,
-}
 /// Represents a client for interacting with the market.
 ///
 /// # Example
@@ -22,18 +19,19 @@ struct ConfigToml {
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
-///     let client = MarketClient::init().await?;
+///     // get token from env or config file...
+///     let access_token = "somE-toKen";
+///     let client = MarketClient::init(access_token).await?;
 ///     // Use the market_client instance...
 ///     Ok(())
 /// }
 /// ```
 #[derive(Debug, Clone)]
 pub struct MarketClient {
+    base_path: Url,
     client: reqwest::Client,
     access_token: String,
-    check_token: String,
-    campaign_id: i64,
-    business_id: i64,
+    campaign_ids: Vec<CampaignDto>,
 }
 
 impl MarketClient {
@@ -46,46 +44,34 @@ impl MarketClient {
     /// use anyhow::Result;
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
-    ///     let market_client = MarketClient::init().await?;
+    ///     // get token from env or config file...
+    ///     let access_token = "somE-toKen";
+    ///     let market_client = MarketClient::init(access_token).await?;
     ///     // Use the market_client instance...
     ///     Ok(())
     /// }
     /// ```
-    /// require Config.toml file
-    ///
-    /// ```toml
-    /// [config]
-    /// access_token = 'someaccesstoken'
-    /// check_token = 'somechecktoken'
-    /// ```
-    ///
     #[instrument]
-    pub async fn init() -> Result<Self> {
+    pub async fn init<T: AsRef<str> + Debug>(access_token: T) -> Result<Self> {
         debug!("Initializing MarketClient");
         static APP_USER_AGENT: &str =
             concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
-        let file_path = "Config.toml";
-        let mut file = std::fs::File::open(file_path)?;
-        let mut str_val = String::new();
-        std::io::Read::read_to_string(&mut file, &mut str_val)?;
-        let config: ConfigToml = toml::from_str(&str_val)?;
+        let mut header = HeaderMap::new();
+        header.insert(ACCEPT, "application/json".parse()?);
         let client = reqwest::Client::builder()
             .user_agent(APP_USER_AGENT)
+            .default_headers(header)
             .gzip(true)
             .build()?;
+        let base_path = BASE_URL.parse()?;
         let mut result = MarketClient {
+            base_path,
             client,
-            access_token: config.config.access_token,
-            check_token: config.config.check_token,
-            campaign_id: 0,
-            business_id: 0,
+            access_token: access_token.as_ref().into(),
+            campaign_ids: Vec::new(),
         };
-        let campaigns = result.campaigns().get_all_campaigns().await?;
-        let Some(campaign) = campaigns.first() else {
-            return Err(anyhow!("No campaigns found"));
-        };
-        result.campaign_id = campaign.id;
-        result.business_id = campaign.business.id;
+        let campaigns = result.get_campaigns().await?;
+        result.campaign_ids = campaigns;
         Ok(result)
     }
     #[instrument]
@@ -93,43 +79,25 @@ impl MarketClient {
         debug!("Initializing MarketClient");
         let access_token =
             std::env::var("MARKET_ACCESS_TOKEN").expect("MARKET_ACCESS_TOKEN env var not set!");
-        let check_token =
-            std::env::var("MARKET_CHECK_TOKEN").expect("MARKET_CHECK_TOKEN env var not set!");
-        let client = reqwest::Client::builder().gzip(true).build()?;
+        static APP_USER_AGENT: &str =
+            concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
+        let mut header = HeaderMap::new();
+        header.insert(ACCEPT, "application/json".parse()?);
+        let client = reqwest::Client::builder()
+            .user_agent(APP_USER_AGENT)
+            .default_headers(header)
+            .gzip(true)
+            .build()?;
+        let base_path = BASE_URL.parse()?;
+        let access_token: &str = access_token.as_ref();
         let mut result = MarketClient {
+            base_path,
             client,
-            access_token,
-            check_token,
-            campaign_id: 0,
-            business_id: 0,
+            access_token: access_token.to_string(),
+            campaign_ids: Vec::new(),
         };
-        let campaigns = result.campaigns().get_all_campaigns().await?;
-        let Some(campaign) = campaigns.first() else {
-            return Err(anyhow!("No campaigns found"));
-        };
-        result.campaign_id = campaign.id;
-        result.business_id = campaign.business.id;
-        Ok(result)
-    }
-    pub async fn with_tokens(
-        access_token: impl Into<String>,
-        check_token: impl Into<String>,
-    ) -> Result<Self> {
-        debug!("Initializing MarketClient");
-        let client = reqwest::Client::builder().gzip(true).build()?;
-        let mut result = MarketClient {
-            client,
-            access_token: access_token.into(),
-            check_token: check_token.into(),
-            campaign_id: 0,
-            business_id: 0,
-        };
-        let campaigns = result.campaigns().get_all_campaigns().await?;
-        let Some(campaign) = campaigns.first() else {
-            return Err(anyhow!("No campaigns found"));
-        };
-        result.campaign_id = campaign.id;
-        result.business_id = campaign.business.id;
+        let campaigns = result.get_campaigns().await?;
+        result.campaign_ids = campaigns;
         Ok(result)
     }
     pub fn client(&self) -> &reqwest::Client {
@@ -138,13 +106,21 @@ impl MarketClient {
     pub fn access_token(&self) -> &str {
         &self.access_token
     }
-    pub fn check_token(&self) -> &str {
-        &self.check_token
+    pub fn campaigns(&self) -> Vec<CampaignDto> {
+        self.campaign_ids.clone()
     }
-    pub fn campaign_id(&self) -> i64 {
-        self.campaign_id
+    pub fn base_path(&self) -> &Url {
+        &self.base_path
     }
-    pub fn business_id(&self) -> i64 {
-        self.business_id
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_init() -> Result<()> {
+        let client = MarketClient::from_env().await?;
+        assert!(client.campaigns().len() > 0);
+        Ok(())
     }
 }

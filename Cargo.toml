@@ -1,6 +1,6 @@
 [package]
 name = "rust-yandexmarket"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Aleksandr Provotorov <provotorov@inbox.ru>"]
 rust-version = "1.75"
@@ -8,17 +8,17 @@ license = "MIT"
 description = "Библиотека для работы с API Yandex.Market на языке программирования Rust"
 repository = "https://github.com/LigeronAhill/rust-yandexmarket"
 readme = "README.md"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = { version = "0.4.33", features = ["serde"] }
-reqwest = { version = "0.11.23", features = ["gzip", "json"] }
-serde = { version = "1.0.196", features = ["derive"] }
+reqwest = { version = "0.12.5", features = ["gzip", "json", "multipart"] }
+url = "2.5.2"
+uuid = { version = "1.9.1", features = ["serde"]}
+serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.113"
 serde_with = "3.6.0"
-tokio = { version = "1.35.1", features = ["full"] }
-toml = "0.8.8"
+#serde_derive = "1.0.203"
+tokio = { version = "1.38.0", features = ["full"] }
 tracing = { version = "0.1.40", features = ["attributes"] }
 anyhow = "1.0.82"
 
