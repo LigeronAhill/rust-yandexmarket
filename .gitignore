@@ -1,3 +1,4 @@
 /target
 .*
 !.gitignore
+/yandex-market-partner-api/
