@@ -11,16 +11,4 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.12.5", features = ["gzip", "json", "multipart"] }
-url = "2.5.2"
-uuid = { version = "1.9.1", features = ["serde"]}
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.113"
-serde_with = "3.6.0"
-#serde_derive = "1.0.203"
-tokio = { version = "1.38.0", features = ["full"] }
-tracing = { version = "0.1.40", features = ["attributes"] }
-anyhow = "1.0.82"
-
-[dev-dependencies]
-tracing-subscriber = "0.3.18"
+openapi = { path = "./gen", package = "openapi" }
