@@ -11,5 +11,7 @@ async fn main() -> Result<()> {
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
     let client = MarketClient::new(token)?;
     info!("Client initialized successfully\n{client:#?}");
+    let categories_tree = client.get_categories_tree().await?;
+    info!("Categories tree: {:#?}", categories_tree);
     Ok(())
 }

@@ -11,5 +11,8 @@ async fn main() -> Result<()> {
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
     let client = MarketClient::new(token)?;
     info!("Client initialized successfully\n{client:#?}");
+    let category_id = 91636;
+    let category_max_sale_quantum = client.get_categories_max_sale_quantum(vec![category_id]).await?;
+    info!("Category max sale quantum:\n{category_max_sale_quantum:#?}");
     Ok(())
 }

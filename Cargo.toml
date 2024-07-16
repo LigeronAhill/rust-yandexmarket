@@ -3,7 +3,7 @@ name = "rust-yandexmarket"
 version = "0.1.2"
 edition = "2021"
 authors = ["Aleksandr Provotorov <provotorov@inbox.ru>"]
-rust-version = "1.75"
+rust-version = "1.79"
 license = "MIT"
 description = "Библиотека для работы с API Yandex.Market на языке программирования Rust"
 repository = "https://github.com/LigeronAhill/rust-yandexmarket"
@@ -18,3 +18,9 @@ anyhow = "1.0.86"
 # requests
 reqwest = { version = "0.12.5", features = ["json", "gzip"] }
 serde = { version = "1.0.204", features = ["derive"] }
+# telemetry
+tracing = "0.1.40"
+# secrets
+secrecy = "0.8.0"
+[dev-dependencies]
+tracing-subscriber = "0.3.18"

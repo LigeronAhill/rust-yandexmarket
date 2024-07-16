@@ -2,3 +2,6 @@
 .*
 !.gitignore
 /yandex-market-partner-api/
+/http_requests
+.idea
+.cargo
