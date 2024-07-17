@@ -17,7 +17,9 @@ tokio = {version = "1.38.0", features = ["full"]}
 anyhow = "1.0.86"
 # requests
 reqwest = { version = "0.12.5", features = ["json", "gzip"] }
+# serialization
 serde = { version = "1.0.204", features = ["derive"] }
+derive_builder = "0.20.0"
 # telemetry
 tracing = "0.1.40"
 # secrets
