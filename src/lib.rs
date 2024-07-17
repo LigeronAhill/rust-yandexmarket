@@ -520,12 +520,12 @@ impl MarketClient {
         let endpoint = format!("businesses/{business_id}/offer-mappings");
         let mut uri = self.base_url.join(&endpoint)?;
         if let Some(limit) = limit {
-            let query = Some(format!("limit={limit}").as_str());
-            uri.set_query(query)
+            let query = format!("limit={limit}");
+            uri.set_query(Some(query.as_str()))
         }
         if let Some(page_token) = page_token {
-            let query = Some(format!("page_token={page_token}").as_str());
-            uri.set_query(query)
+            let query = format!("page_token={page_token}");
+            uri.set_query(Some(query.as_str()))
         }
         let response: GetOfferMappingsResponse = if let Some(body) = body {
             self
