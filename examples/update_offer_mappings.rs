@@ -1,5 +1,7 @@
 use anyhow::Result;
-use rust_yandexmarket::models::{CategoryParameterDto, ParameterValueDto, UpdateOfferDto, UpdateOfferMappingDto};
+use rust_yandexmarket::models::{
+    CategoryParameterDto, ParameterValueDto, UpdateOfferDto, UpdateOfferMappingDto,
+};
 use rust_yandexmarket::MarketClient;
 use tracing::info;
 
@@ -21,15 +23,6 @@ async fn main() -> Result<()> {
         .and_then(|r| r.parameters)
         .unwrap_or_default();
     let mut parameters = Vec::new();
-    let get_unit_id = |c: &CategoryParameterDto, unit: &str| {
-        c.clone().unit.and_then(|u| {
-            u
-                .units
-                .into_iter()
-                .find(|d| d.full_name == unit)
-                .map(|d| d.id)
-        })
-    };
     for content_parameter in content_parameters {
         if let Some(name) = content_parameter.name {
             let parameter_id = content_parameter.id;
@@ -37,91 +30,64 @@ async fn main() -> Result<()> {
             let mut value_id = None;
             let value = match name.as_str() {
                 "Ширина" => {
-                    unit_id = get_unit_id(&content_parameter, "метр");
+                    unit_id = content_parameter.get_unit_id("метр");
                     "0.8"
                 }
                 "Форма" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "прямоугольная"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("прямоугольная");
                     "прямоугольная"
                 }
                 "Цвет товара для карточки" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "75"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("75");
                     "75"
                 }
                 "Количество в наборе" => "2",
                 "Длина" => "1.5",
                 "Цвет товара для фильтра" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "серый"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("серый");
                     "серый"
                 }
                 "Вес" => "6.72",
                 "Толщина" => {
-                    unit_id = get_unit_id(&content_parameter, "миллиметр");
+                    unit_id = content_parameter.get_unit_id("миллиметр");
                     "15.5"
                 }
                 "Материал основы" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "джут"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("джут");
                     "джут"
                 }
                 "Материал верха" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "полиамид"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("полиамид");
                     "полиамид"
                 }
                 "Тип" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "ковер"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("ковер");
                     "ковер"
                 }
                 "Тип рисунка" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "однотонный"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("однотонный");
                     "однотонный"
                 }
                 "Способ производства" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "машинный"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("машинный");
                     "машинный"
                 }
                 "Противоскользящая основа" => "false",
                 "Безворсовый" => "false",
                 "Вес ворса на квадратный метр" => {
-                    unit_id = get_unit_id(&content_parameter, "г/м²");
+                    unit_id = content_parameter.get_unit_id("г/м²");
                     "2100"
                 }
                 "Высота ворса" => {
-                    unit_id = get_unit_id(&content_parameter, "миллиметр");
+                    unit_id = content_parameter.get_unit_id("миллиметр");
                     "13"
                 }
                 "Вес на квадратный метр" => {
-                    unit_id = get_unit_id(&content_parameter, "г/м²");
+                    unit_id = content_parameter.get_unit_id("г/м²");
                     "2800"
                 }
                 "Страна производства" => {
-                    value_id = content_parameter
-                        .values
-                        .and_then(|v| v.into_iter().find(|p| p.value == "Бельгия"))
-                        .map(|p| p.id.to_owned());
+                    value_id = content_parameter.get_value_id("Бельгия");
                     "Бельгия"
                 }
                 "Набор" => "true",

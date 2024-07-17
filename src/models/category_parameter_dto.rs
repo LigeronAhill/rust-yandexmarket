@@ -84,4 +84,27 @@ impl CategoryParameterDto {
             value_restrictions: None,
         }
     }
+    pub fn get_unit_id(&self, full_name: &str) -> Option<i64> {
+        self
+            .unit
+            .clone()
+            .and_then(|u| {
+                u
+                    .units
+                    .into_iter()
+                    .find(|d| d.full_name == full_name)
+                    .map(|d| d.id)
+            })
+    }
+    pub fn get_value_id(&self, value: &str) -> Option<i64> {
+        self
+            .values
+            .clone()
+            .and_then(|v| {
+                v
+                    .into_iter()
+                    .find(|p| p.value == value)
+                    .map(|p| p.id)
+            })
+    }
 }

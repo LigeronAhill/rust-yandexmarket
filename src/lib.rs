@@ -3,12 +3,7 @@
 //!
 //! Библиотека для работы с API Yandex.Market на языке программирования Rust
 
-use crate::models::{
-    CategoryDto, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest,
-    GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse,
-    GetCategoryContentParametersResponse, UpdateOfferMappingDto, UpdateOfferMappingsRequest,
-    UpdateOfferMappingsResponse,
-};
+use crate::models::{CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CategoryDto, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingsRequest, GetOfferMappingsResponse, PaymentFrequencyType, SellingProgramType, UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse};
 use anyhow::Result;
 use reqwest::Url;
 use secrecy::{ExposeSecret, Secret};
@@ -454,6 +449,104 @@ impl MarketClient {
             .await?
             .json()
             .await?;
+        Ok(response)
+    }
+    /// Рассчитывает стоимость услуг Маркета для товаров с заданными параметрами. Порядок товаров в запросе и ответе сохраняется, чтобы определить, для какого товара рассчитана стоимость услуги.
+    ///
+    /// Обратите внимание: калькулятор осуществляет примерные расчеты. Финальная стоимость для каждого заказа зависит от предоставленных услуг.
+    ///
+    /// В запросе можно указать либо параметр `campaignId`, либо `sellingProgram`. Совместное использование параметров приведет к ошибке.
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    /// use rust_yandexmarket::models::{CalculateTariffsOfferDto, SellingProgramType};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     info!("Client initialized successfully\n{client:#?}");
+    ///     let offers = vec![CalculateTariffsOfferDto::new(
+    ///         6119048,
+    ///         21990.0,
+    ///         0.8,
+    ///         0.4,
+    ///         0.4,
+    ///         6.72,
+    ///         Some(1),
+    ///     )];
+    ///     let tariffs = client
+    ///         .tariffs_calculate(None, Some(SellingProgramType::Dbs), None, offers)
+    ///         .await?;
+    ///     info!("Tariffs: {:#?}", tariffs);
+    ///     Ok(())
+    /// }
+    ///```
+    #[instrument(skip(self, offers))]
+    pub async fn tariffs_calculate(
+        &self,
+        campaign_id: Option<i64>,
+        selling_program: Option<SellingProgramType>,
+        frequency: Option<PaymentFrequencyType>,
+        offers: Vec<CalculateTariffsOfferDto>,
+    ) -> Result<CalculateTariffsResponse> {
+        let uri = self.base_url.join("tariffs/calculate")?;
+        let parameters =
+            CalculateTariffsParametersDto::new(campaign_id, selling_program, frequency);
+        let body = CalculateTariffsRequest::new(parameters, offers);
+        let response: CalculateTariffsResponse = self
+            .client
+            .post(uri)
+            .bearer_auth(&self.token())
+            .json(&body)
+            .send()
+            .await?
+            .json()
+            .await?;
+        Ok(response)
+    }
+    pub async fn offer_mappings<T: Display + Debug>(
+        &self,
+        business_id: T,
+        limit: Option<u32>,
+        page_token: Option<T>,
+        body: Option<GetOfferMappingsRequest>
+    ) -> Result<GetOfferMappingsResponse> {
+        let endpoint = format!("businesses/{business_id}/offer-mappings");
+        let mut uri = self.base_url.join(&endpoint)?;
+        if let Some(limit) = limit {
+            let query = Some(format!("limit={limit}").as_str());
+            uri.set_query(query)
+        }
+        if let Some(page_token) = page_token {
+            let query = Some(format!("page_token={page_token}").as_str());
+            uri.set_query(query)
+        }
+        let response: GetOfferMappingsResponse = if let Some(body) = body {
+            self
+                .client
+                .post(uri)
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?
+        } else {
+            self
+                .client
+                .get(uri)
+                .bearer_auth(&self.token())
+                .send()
+                .await?
+                .json()
+                .await?
+        };
         Ok(response)
     }
 }
