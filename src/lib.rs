@@ -510,6 +510,40 @@ impl MarketClient {
             .await?;
         Ok(response)
     }
+    /// Возвращает список товаров в каталоге, их категории на Маркете и характеристики каждого товара.
+    /// Можно использовать тремя способами:
+    ///
+    /// Задать список интересующих SKU;
+    /// задать фильтр — в этом случае результаты возвращаются постранично;
+    /// не передавать тело запроса, чтобы получить список всех товаров в каталоге.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    /// use rust_yandexmarket::models::GetOfferMappingsRequest;
+///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     info!("Client initialized successfully\n{client:#?}");
+    ///     let business_id = 919862;
+    ///     let request = Some(GetOfferMappingsRequest::builder()
+    ///         .vendor_names(vec!["Haima".to_string()])
+    ///         .build()?);
+    ///     let offer_mappings = client.offer_mappings(business_id, None, None, request).await?;
+    ///     info!("Offer mappings: {:#?}", offer_mappings);
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self))]
     pub async fn offer_mappings<T: Display + Debug>(
         &self,
         business_id: T,
