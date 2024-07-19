@@ -1,6 +1,6 @@
 use anyhow::Result;
 use rust_yandexmarket::models::{
-    CategoryParameterDto, ParameterValueDto, UpdateOfferDto, UpdateOfferMappingDto,
+    ParameterValueDto, UpdateOfferDto, UpdateOfferMappingDto,
 };
 use rust_yandexmarket::MarketClient;
 use tracing::info;
@@ -23,12 +23,12 @@ async fn main() -> Result<()> {
         .and_then(|r| r.parameters)
         .unwrap_or_default();
     let mut parameters = Vec::new();
-    for content_parameter in content_parameters {
-        if let Some(name) = content_parameter.name {
+    for content_parameter in content_parameters.iter() {
+        if let Some(name) = content_parameter.name.as_deref() {
             let parameter_id = content_parameter.id;
             let mut unit_id = None;
             let mut value_id = None;
-            let value = match name.as_str() {
+            let value = match name {
                 "Ширина" => {
                     unit_id = content_parameter.get_unit_id("метр");
                     "0.8"
@@ -118,10 +118,10 @@ async fn main() -> Result<()> {
         .weight_dimensions(80.0, 40.0, 40.0, 6.72)
         .vendor_code("AW Carolus 75")
         .parameter_values(parameters)
-        .basic_price(21990.0, Some(27490.0))
+        .basic_price(27490.0, Some(35350.0))
         .purchase_price(15340.0)
         .additional_expenses(2900.0)
-        .cofinance_price(20190.0)
+        .cofinance_price(21990.0)
         .build()?;
     let update_offers_mapping_dto = vec![UpdateOfferMappingDto::new(offer)];
     let update_result = client

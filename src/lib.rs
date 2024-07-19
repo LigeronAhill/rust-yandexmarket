@@ -3,12 +3,14 @@
 //!
 //! Библиотека для работы с API Yandex.Market на языке программирования Rust
 
-use crate::models::{CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CategoryDto, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingsRequest, GetOfferMappingsResponse, PaymentFrequencyType, SellingProgramType, UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse};
+use std::fmt::{Debug, Display};
+
 use anyhow::Result;
 use reqwest::Url;
 use secrecy::{ExposeSecret, Secret};
-use std::fmt::{Debug, Display};
 use tracing::instrument;
+
+use crate::models::{ApiErrorResponse, CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CategoryDto, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingsRequest, GetOfferMappingsResponse, PaymentFrequencyType, SellingProgramType, UpdateCampaignOfferDto, UpdateCampaignOffersRequest, UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse};
 
 pub mod models;
 
@@ -582,6 +584,54 @@ impl MarketClient {
                 .await?
         };
         Ok(response)
+    }
+    /// Изменяет параметры размещения товаров в конкретном магазине: доступность товара, условия доставки и самовывоза, применяемую ставку НДС.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    ///
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    /// use rust_yandexmarket::models::UpdateCampaignOfferDto;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     info!("Client initialized successfully\n{client:#?}");
+    ///     let campaign_id = 112289474;
+    ///     let offer = UpdateCampaignOfferDto::builder()
+    ///         .offer_id("AW Carolus 75 0.8x1.5 - 2 pcs")
+    ///         .quantum(1,1)
+    ///         .available(true)
+    ///         .vat(6)
+    ///         .build()?;
+    ///     let result = client.offers_update(campaign_id, vec![offer]).await?;
+    ///     info!("Offers update result:\n{result:#?}");
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self))]
+    pub async fn offers_update<T: Debug + Display>(&self, campaign_id: T, offers: Vec<UpdateCampaignOfferDto>) -> Result<ApiErrorResponse> {
+        let endpoint = format!("campaigns/{}/offers/update", campaign_id);
+        let uri = self.base_url.join(&endpoint)?;
+        let body = UpdateCampaignOffersRequest::new(offers);
+        let result: ApiErrorResponse = self
+            .client
+            .post(uri)
+            .bearer_auth(&self.token())
+            .json(&body)
+            .send()
+            .await?
+            .json()
+            .await?;
+        Ok(result)
     }
 }
 pub fn search_in_categories_by_name(
