@@ -10,7 +10,15 @@ use reqwest::Url;
 use secrecy::{ExposeSecret, Secret};
 use tracing::instrument;
 
-use crate::models::{ApiErrorResponse, CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CategoryDto, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingsRequest, GetOfferMappingsResponse, PaymentFrequencyType, SellingProgramType, UpdateCampaignOfferDto, UpdateCampaignOffersRequest, UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse};
+use crate::models::{
+    ApiErrorResponse, CalculateTariffsOfferDto, CalculateTariffsParametersDto,
+    CalculateTariffsRequest, CalculateTariffsResponse, CategoryDto, GetCampaignOffersRequest,
+    GetCampaignOffersResponse, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest,
+    GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse,
+    GetCategoryContentParametersResponse, GetOfferMappingsRequest, GetOfferMappingsResponse,
+    PaymentFrequencyType, SellingProgramType, UpdateCampaignOfferDto, UpdateCampaignOffersRequest,
+    UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse,
+};
 
 pub mod models;
 
@@ -526,7 +534,7 @@ impl MarketClient {
     /// use rust_yandexmarket::MarketClient;
     /// use tracing::info;
     /// use rust_yandexmarket::models::GetOfferMappingsRequest;
-///
+    ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
     ///     let subscriber = tracing_subscriber::fmt()
@@ -551,7 +559,7 @@ impl MarketClient {
         business_id: T,
         limit: Option<u32>,
         page_token: Option<T>,
-        body: Option<GetOfferMappingsRequest>
+        body: Option<GetOfferMappingsRequest>,
     ) -> Result<GetOfferMappingsResponse> {
         let endpoint = format!("businesses/{business_id}/offer-mappings");
         let mut uri = self.base_url.join(&endpoint)?;
@@ -564,8 +572,7 @@ impl MarketClient {
             uri.set_query(Some(query.as_str()))
         }
         let response: GetOfferMappingsResponse = if let Some(body) = body {
-            self
-                .client
+            self.client
                 .post(uri)
                 .bearer_auth(&self.token())
                 .json(&body)
@@ -574,8 +581,7 @@ impl MarketClient {
                 .json()
                 .await?
         } else {
-            self
-                .client
+            self.client
                 .get(uri)
                 .bearer_auth(&self.token())
                 .send()
@@ -618,7 +624,11 @@ impl MarketClient {
     /// }
     /// ```
     #[instrument(skip(self))]
-    pub async fn offers_update<T: Debug + Display>(&self, campaign_id: T, offers: Vec<UpdateCampaignOfferDto>) -> Result<ApiErrorResponse> {
+    pub async fn offers_update<T: Debug + Display>(
+        &self,
+        campaign_id: T,
+        offers: Vec<UpdateCampaignOfferDto>,
+    ) -> Result<ApiErrorResponse> {
         let endpoint = format!("campaigns/{}/offers/update", campaign_id);
         let uri = self.base_url.join(&endpoint)?;
         let body = UpdateCampaignOffersRequest::new(offers);
@@ -631,6 +641,71 @@ impl MarketClient {
             .await?
             .json()
             .await?;
+        Ok(result)
+    }
+    /// Возвращает список товаров, размещенных в заданном магазине. Для каждого товара указываются параметры размещения.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     info!("Client initialized successfully\n{client:#?}");
+    ///     let offers = client
+    ///         .get_campaign_offers(112289474, None, None, None)
+    ///         .await?;
+    ///     info!("Offers: {:#?}", offers);
+    ///     Ok(())
+    /// }
+    ///```
+    #[instrument(skip(self))]
+    pub async fn get_campaign_offers<T: Debug + Display>(
+        &self,
+        campaign_id: T,
+        limit: Option<T>,
+        page_token: Option<T>,
+        get_campaign_offers_request: Option<GetCampaignOffersRequest>,
+    ) -> Result<GetCampaignOffersResponse> {
+        let endpoint = format!("campaigns/{}/offers", campaign_id);
+        let mut uri = self.base_url.join(&endpoint)?;
+        if let Some(limit) = limit {
+            let query = format!("limit={limit}");
+            uri.set_query(Some(query.as_str()))
+        }
+        if let Some(page_token) = page_token {
+            let query = format!("page_token={page_token}");
+            uri.set_query(Some(query.as_str()))
+        }
+        let result: GetCampaignOffersResponse = if let Some(body) = get_campaign_offers_request {
+            self.client
+                .post(uri)
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?
+        } else {
+            let body = GetCampaignOffersRequest::builder().build()?;
+            self.client
+                .post(uri)
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?
+        };
         Ok(result)
     }
 }

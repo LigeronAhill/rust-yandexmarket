@@ -1,5 +1,4 @@
 use anyhow::Result;
-use rust_yandexmarket::models::UpdateCampaignOfferDto;
 use rust_yandexmarket::MarketClient;
 use tracing::info;
 
@@ -12,14 +11,9 @@ async fn main() -> Result<()> {
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
     let client = MarketClient::new(token)?;
     info!("Client initialized successfully\n{client:#?}");
-    let campaign_id = 112289474;
-    let offer = UpdateCampaignOfferDto::builder()
-        .offer_id("AW Carolus 75 0.8x1.5 - 2 pcs")
-        .quantum(1, 1)
-        .available(true)
-        .vat(6)
-        .build()?;
-    let result = client.offers_update(campaign_id, vec![offer]).await?;
-    info!("Offers update result:\n{result:#?}");
+    let offers = client
+        .get_campaign_offers(112289474, None, None, None)
+        .await?;
+    info!("Offers: {:#?}", offers);
     Ok(())
 }
