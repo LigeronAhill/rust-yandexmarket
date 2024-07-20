@@ -24,7 +24,11 @@ pub struct UpdatePriceWithDiscountDto {
 
 impl UpdatePriceWithDiscountDto {
     /// Цена с указанием скидки.
-    pub fn new(value: f32, discount_base: Option<f32>, currency_id: crate::models::CurrencyType) -> UpdatePriceWithDiscountDto {
+    pub fn new(
+        value: f32,
+        discount_base: Option<f32>,
+        currency_id: crate::models::CurrencyType,
+    ) -> UpdatePriceWithDiscountDto {
         UpdatePriceWithDiscountDto {
             value,
             currency_id,

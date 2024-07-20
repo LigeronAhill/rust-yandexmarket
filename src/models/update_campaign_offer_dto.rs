@@ -38,7 +38,10 @@ impl UpdateCampaignOfferDto {
 }
 impl UpdateCampaignOfferDtoBuilder {
     pub fn quantum(&mut self, min_quantity: i32, quantity_step: i32) -> &mut Self {
-        self.quantum = Some(Some(Box::new(crate::models::QuantumDto::new(min_quantity, quantity_step))));
+        self.quantum = Some(Some(Box::new(crate::models::QuantumDto::new(
+            min_quantity,
+            quantity_step,
+        ))));
         self
     }
 }

@@ -1,7 +1,5 @@
 use anyhow::Result;
-use rust_yandexmarket::models::{
-    ParameterValueDto, UpdateOfferDto, UpdateOfferMappingDto,
-};
+use rust_yandexmarket::models::{ParameterValueDto, UpdateOfferDto, UpdateOfferMappingDto};
 use rust_yandexmarket::MarketClient;
 use tracing::info;
 

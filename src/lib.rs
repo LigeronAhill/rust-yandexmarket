@@ -8,7 +8,18 @@ use reqwest::Url;
 use secrecy::{ExposeSecret, Secret};
 use tracing::{error, instrument};
 
-use crate::models::{ApiErrorResponse, ApiResponseStatusType, CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CampaignDto, CategoryDto, DeleteOffersRequest, DeleteOffersResponse, GetCampaignOfferDto, GetCampaignOffersRequest, GetCampaignOffersResponse, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingDto, GetOfferMappingsRequest, GetOfferMappingsResponse, PaymentFrequencyType, SellingProgramType, UpdateCampaignOfferDto, UpdateCampaignOffersRequest, UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse};
+use crate::models::{
+    ApiErrorResponse, ApiResponseStatusType, CalculateTariffsOfferDto,
+    CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CampaignDto,
+    CategoryDto, DeleteOffersRequest, DeleteOffersResponse, GetCampaignOfferDto,
+    GetCampaignOffersRequest, GetCampaignOffersResponse, GetCampaignsResponse,
+    GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse,
+    GetCategoryContentParametersResponse, GetOfferMappingDto, GetOfferMappingsRequest,
+    GetOfferMappingsResponse, GetOfferRecommendationsRequest, GetOfferRecommendationsResponse,
+    OfferRecommendationDto, PaymentFrequencyType, SellingProgramType, UpdateBusinessOfferPriceDto,
+    UpdateBusinessPricesRequest, UpdateCampaignOfferDto, UpdateCampaignOffersRequest,
+    UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse,
+};
 
 pub mod models;
 
@@ -32,14 +43,25 @@ pub mod models;
 ///     Ok(())
 /// }
 ///```
-/// 1. Получите список категорий Маркета, выполнив запрос get_categories_tree.
-/// 2. Для каждой категории запросите список необходимых характеристик с помощью get_category_content_parameters.
-/// 3. Передайте информацию о товарах (названия, описания, фотографии и так далее), цены, категории на Маркете и характеристики с помощью запроса update_offer_mappings.
-/// 4. Чтобы узнать стоимость услуг Маркета для конкретных товаров, передайте их параметры в запросе tariffs_calculate.
-/// 5. Получите у Маркета список моделей, по которым можно продавать каждый из добавленных товаров с помощью запроса offer_mappings. [Что такое модель работы и какие модели есть](https://yandex.ru/support/marketplace/introduction/models.html).
-/// 6. Задайте условия размещения товаров с помощью запроса offers_update. Условия размещения — это минимальный объем заказа, квант продаж и ставка НДС. Если вы работаете по модели DBS, этим же запросом задаются параметры доставки.
-/// 7. Убедитесь, что товары появились на витрине, с помощью запроса get_campaign_offers.
+///
+/// ## Как добавить новые товары в каталог
+///
+/// 1. Получите список категорий Маркета, выполнив запрос [`get_categories_tree`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/categories/getCategoriesTree).
+/// 2. Для каждой категории запросите список необходимых характеристик с помощью [`get_category_content_parameters`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/content/getCategoryContentParameters).
+/// 3. Передайте информацию о товарах (названия, описания, фотографии и так далее), цены, категории на Маркете и характеристики с помощью запроса [`update_offer_mappings`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/updateOfferMappings).
+/// 4. Чтобы узнать стоимость услуг Маркета для конкретных товаров, передайте их параметры в запросе [`tariffs_calculate`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/tariffs/calculateTariffs).
+/// 5. Получите у Маркета список моделей, по которым можно продавать каждый из добавленных товаров с помощью запроса [`offer_mappings`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/getOfferMappings). [Что такое модель работы и какие модели есть](https://yandex.ru/support/marketplace/introduction/models.html).
+/// 6. Задайте условия размещения товаров с помощью запроса [`offers_update`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/assortment/updateCampaignOffers). Условия размещения — это минимальный объем заказа, квант продаж и ставка НДС. Если вы работаете по модели DBS, этим же запросом задаются параметры доставки.
+/// 7. Убедитесь, что товары появились на витрине, с помощью запроса [`get_campaign_offers`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/assortment/getCampaignOffers).
 /// Подробные пояснения к статусам товаров вы найдете в [Справке Маркета для продавцов](https://yandex.ru/support/marketplace/assortment/add/statuses.html).
+///
+/// ## Как изменить цены на товары
+///
+/// 1. Чтобы узнать стоимость услуг Маркета для конкретных товаров, передайте их параметры в запросе [`tariffs_calculate`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/tariffs/calculateTariffs).
+/// 2. Передайте новые цены для всех магазинов с помощью запроса [`offer_prices_updates`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/updateBusinessPrices).
+/// 3. Убедитесь, что ни один из товаров не попал в карантин с помощью запроса POST businesses/{businessId}/price-quarantine.
+/// 4. Если карантин не пустой, проверьте цены на товары. Ошибочно установленные цены для всех магазинов можно исправить запросом [`offer_prices_updates`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/updateBusinessPrices).
+/// 5. После того как в карантине останутся только правильные цены, подтвердите их запросом POST businesses/{businessId}/price-quarantine/confirm. Если ложные срабатывания карантина случаются часто, подумайте о том, чтобы изменить его порог по инструкции.
 #[derive(Debug)]
 pub struct MarketClient {
     token: Secret<String>,
@@ -251,9 +273,7 @@ impl MarketClient {
                 }
                 Some(campaigns) => {
                     result.extend(campaigns);
-                    match response
-                        .pager
-                        .and_then(|p| p.pages_count) {
+                    match response.pager.and_then(|p| p.pages_count) {
                         None => {
                             break;
                         }
@@ -596,9 +616,16 @@ impl MarketClient {
                     .json()
                     .await?
             };
-            let offer_mappings = response.result.clone().and_then(|r| r.offer_mappings).unwrap_or_default();
+            let offer_mappings = response
+                .result
+                .clone()
+                .and_then(|r| r.offer_mappings)
+                .unwrap_or_default();
             result.extend(offer_mappings);
-            if let Some(next_page_token) = response.result.and_then(|r| r.paging.and_then(|p| p.next_page_token)) {
+            if let Some(next_page_token) = response
+                .result
+                .and_then(|r| r.paging.and_then(|p| p.next_page_token))
+            {
                 page_token = Some(next_page_token);
             } else {
                 break;
@@ -699,21 +726,25 @@ impl MarketClient {
                 uri.set_query(Some(query.as_str()));
             }
             let body = get_campaign_offers_request.clone().unwrap_or_default();
-            let response: GetCampaignOffersResponse = self.client
-                    .post(uri.clone())
-                    .bearer_auth(&self.token())
-                    .json(&body)
-                    .send()
-                    .await?
-                    .json()
-                    .await?;
+            let response: GetCampaignOffersResponse = self
+                .client
+                .post(uri.clone())
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?;
             let offers = response
                 .result
                 .clone()
                 .and_then(|r| r.offers)
                 .unwrap_or_default();
             result.extend(offers);
-            match response.result.and_then(|r| r.paging.and_then(|s| s.next_page_token)) {
+            match response
+                .result
+                .and_then(|r| r.paging.and_then(|s| s.next_page_token))
+            {
                 None => break,
                 Some(next_page_token) => {
                     page_token = Some(next_page_token);
@@ -787,6 +818,125 @@ impl MarketClient {
             }
         }
         Ok(not_deleted_offers)
+    }
+    /// Устанавливает базовые цены. Чтобы получить рекомендации Маркета, касающиеся цен, выполните запрос [`offers_recommendations`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/getOfferRecommendations)
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use rust_yandexmarket::models::UpdateBusinessOfferPriceDto;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     let business_id = 919862;
+    ///     let offer_id = "AW Mambo 99 50x50";
+    ///     let body = vec![UpdateBusinessOfferPriceDto::new(offer_id, 26925.0, Some(31690.0))];
+    ///     client.offer_prices_updates(business_id, body).await?;
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self, offers))]
+    pub async fn offer_prices_updates(
+        &self,
+        business_id: i64,
+        offers: Vec<UpdateBusinessOfferPriceDto>,
+    ) -> Result<()> {
+        let endpoint = format!("businesses/{business_id}/offer-prices/updates");
+        let uri = self.base_url.join(&endpoint)?;
+        for chunk in offers.chunks(500) {
+            let body = UpdateBusinessPricesRequest::new(chunk.to_vec());
+            let result: ApiErrorResponse = self
+                .client
+                .post(uri.clone())
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?;
+
+            if result
+                .status
+                .is_some_and(|s| s == ApiResponseStatusType::Error)
+            {
+                error!("Error:\n{:?}", result.errors)
+            }
+        }
+        Ok(())
+    }
+    /// Рекомендации Маркета, касающиеся цен
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     let recommendations = client.offers_recommendations(919862, None).await?;
+    ///     info!("{recommendations:#?}");
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self, offer_ids))]
+    pub async fn offers_recommendations(
+        &self,
+        business_id: i64,
+        offer_ids: Option<Vec<String>>,
+    ) -> Result<Vec<OfferRecommendationDto>> {
+        let endpoint = format!("businesses/{business_id}/offers/recommendations");
+        let mut uri = self.base_url.join(&endpoint)?;
+        uri.set_query(Some("limit=200"));
+        let mut page_token = None;
+        let mut result = Vec::new();
+        let body = GetOfferRecommendationsRequest::new(offer_ids);
+        loop {
+            if let Some(next_page_token) = page_token {
+                let query = format!("page_token={}", next_page_token);
+                uri.set_query(Some(query.as_str()));
+            }
+            let response: GetOfferRecommendationsResponse = self
+                .client
+                .post(uri.clone())
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?;
+            let offers = response
+                .result
+                .clone()
+                .and_then(|r| r.offer_recommendations)
+                .unwrap_or_default();
+            result.extend(offers);
+            match response
+                .result
+                .and_then(|r| r.paging.and_then(|s| s.next_page_token))
+            {
+                None => break,
+                Some(next_page_token) => {
+                    page_token = Some(next_page_token);
+                }
+            }
+        }
+        Ok(result)
     }
 }
 pub fn search_in_categories_by_name(

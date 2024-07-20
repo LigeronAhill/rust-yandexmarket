@@ -19,7 +19,10 @@ pub struct GetCampaignOffersRequest {
     pub offer_ids: Option<Vec<String>>,
     /// Фильтр по статусам товаров.
     #[serde(rename = "statuses", skip_serializing_if = "Option::is_none")]
-    #[builder(default = "Some(vec![crate::models::OfferCampaignStatusType::Published])", setter(strip_option))]
+    #[builder(
+        default = "Some(vec![crate::models::OfferCampaignStatusType::Published])",
+        setter(strip_option)
+    )]
     pub statuses: Option<Vec<crate::models::OfferCampaignStatusType>>,
     /// Фильтр по категориям на Маркете.
     #[serde(rename = "categoryIds", skip_serializing_if = "Option::is_none")]
