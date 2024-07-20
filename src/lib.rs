@@ -8,18 +8,7 @@ use reqwest::Url;
 use secrecy::{ExposeSecret, Secret};
 use tracing::{error, instrument};
 
-use crate::models::{
-    ApiErrorResponse, ApiResponseStatusType, CalculateTariffsOfferDto,
-    CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CampaignDto,
-    CategoryDto, DeleteOffersRequest, DeleteOffersResponse, GetCampaignOfferDto,
-    GetCampaignOffersRequest, GetCampaignOffersResponse, GetCampaignsResponse,
-    GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse,
-    GetCategoryContentParametersResponse, GetOfferMappingDto, GetOfferMappingsRequest,
-    GetOfferMappingsResponse, GetOfferRecommendationsRequest, GetOfferRecommendationsResponse,
-    OfferRecommendationDto, PaymentFrequencyType, SellingProgramType, UpdateBusinessOfferPriceDto,
-    UpdateBusinessPricesRequest, UpdateCampaignOfferDto, UpdateCampaignOffersRequest,
-    UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse,
-};
+use crate::models::{ApiErrorResponse, ApiResponseStatusType, CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CampaignDto, ConfirmPricesRequest, DeleteOffersRequest, DeleteOffersResponse, GetCampaignOfferDto, GetCampaignOffersRequest, GetCampaignOffersResponse, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingDto, GetOfferMappingsRequest, GetOfferMappingsResponse, GetOfferRecommendationsRequest, GetOfferRecommendationsResponse, GetQuarantineOffersRequest, GetQuarantineOffersResponse, OfferRecommendationDto, PaymentFrequencyType, QuarantineOfferDto, SellingProgramType, UpdateBusinessOfferPriceDto, UpdateBusinessPricesRequest, UpdateCampaignOfferDto, UpdateCampaignOffersRequest, UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse};
 
 pub mod models;
 
@@ -59,9 +48,9 @@ pub mod models;
 ///
 /// 1. Чтобы узнать стоимость услуг Маркета для конкретных товаров, передайте их параметры в запросе [`tariffs_calculate`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/tariffs/calculateTariffs).
 /// 2. Передайте новые цены для всех магазинов с помощью запроса [`offer_prices_updates`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/updateBusinessPrices).
-/// 3. Убедитесь, что ни один из товаров не попал в карантин с помощью запроса POST businesses/{businessId}/price-quarantine.
+/// 3. Убедитесь, что ни один из товаров не попал в карантин с помощью запроса ['price_quarantine'](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/getBusinessQuarantineOffers).
 /// 4. Если карантин не пустой, проверьте цены на товары. Ошибочно установленные цены для всех магазинов можно исправить запросом [`offer_prices_updates`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/updateBusinessPrices).
-/// 5. После того как в карантине останутся только правильные цены, подтвердите их запросом POST businesses/{businessId}/price-quarantine/confirm. Если ложные срабатывания карантина случаются часто, подумайте о том, чтобы изменить его порог по инструкции.
+/// 5. После того как в карантине останутся только правильные цены, подтвердите их запросом ['price_quarantine_confirm'](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/confirmBusinessPrices). Если ложные срабатывания карантина случаются часто, подумайте о том, чтобы изменить его порог по [инструкции](https://yandex.ru/support/marketplace/assortment/operations/prices.html#quarantine).
 #[derive(Debug)]
 pub struct MarketClient {
     token: Secret<String>,
@@ -938,25 +927,149 @@ impl MarketClient {
         }
         Ok(result)
     }
-}
-pub fn search_in_categories_by_name(
-    categories: &[CategoryDto],
-    search_string: &str,
-) -> Option<CategoryDto> {
-    for category in categories {
-        if category
-            .name
-            .to_lowercase()
-            .contains(&search_string.to_lowercase())
-        {
-            return Some(category.clone());
-        } else {
-            if let Some(children) = category.children.clone() {
-                if let Some(category) = search_in_categories_by_name(&children, search_string) {
-                    return Some(category);
+    /// Возвращает список товаров, которые находятся на карантине по основной цене. Основная цена задается в каталоге и действует во всех магазинах кабинета.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     let business_id = 919862;
+    ///     let quarantine = client.price_quarantine(business_id, None).await?;
+    ///     info!("{quarantine:#?}");
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self))]
+    pub async fn price_quarantine(
+        &self,
+        business_id: i64,
+        req: Option<GetQuarantineOffersRequest>
+    ) -> Result<Vec<QuarantineOfferDto>> {
+        let endpoint = format!("businesses/{business_id}/price-quarantine");
+        let mut uri = self.base_url.join(&endpoint)?;
+        uri.set_query(Some("limit=200"));
+        let mut page_token = None;
+        let mut result = Vec::new();
+        let body = req.unwrap_or(GetQuarantineOffersRequest::new());
+        loop {
+            if let Some(next_page_token) = page_token {
+                let query = format!("page_token={}", next_page_token);
+                uri.set_query(Some(query.as_str()));
+            }
+            let response: GetQuarantineOffersResponse = self
+                .client
+                .post(uri.clone())
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?;
+            let offers = response
+                .result
+                .clone()
+                .and_then(|r| r.offers)
+                .unwrap_or_default();
+            result.extend(offers);
+            match response
+                .result
+                .and_then(|r| r.paging.and_then(|s| s.next_page_token))
+            {
+                None => break,
+                Some(next_page_token) => {
+                    page_token = Some(next_page_token);
                 }
             }
         }
+        Ok(result)
     }
-    None
+    /// Подтверждает основную цену на товары, которые попали в карантин.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    ///
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     let business_id = 919862;
+    ///     let quarantine = client.price_quarantine(business_id, None).await?;
+    ///     info!("{quarantine:#?}");
+    ///     let offer_ids = quarantine
+    ///         .into_iter()
+    ///         .flat_map(|q| q.offer_id)
+    ///         .collect::<Vec<_>>();
+    ///     client.price_quarantine_confirm(business_id, offer_ids).await?;
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self, offer_ids))]
+    pub async fn price_quarantine_confirm(
+        &self,
+        business_id: i64,
+        offer_ids: Vec<String>,
+    ) -> Result<()> {
+        let endpoint = format!("businesses/{business_id}/price-quarantine/confirm");
+        let uri = self.base_url.join(&endpoint)?;
+        for chunk in offer_ids.chunks(200) {
+            let body = ConfirmPricesRequest::new(chunk.to_vec());
+            let response: ApiErrorResponse = self
+                .client
+                .post(uri.clone())
+                .bearer_auth(self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?;
+            if response
+                .status
+                .is_some_and(|s| s == ApiResponseStatusType::Error)
+            {
+                error!("Error:\n{:?}", response.errors)
+            }
+        }
+        Ok(())
+    }
 }
+// pub fn search_in_categories_by_name(
+//     categories: &[CategoryDto],
+//     search_string: &str,
+// ) -> Option<CategoryDto> {
+//     for category in categories {
+//         if category
+//             .name
+//             .to_lowercase()
+//             .contains(&search_string.to_lowercase())
+//         {
+//             return Some(category.clone());
+//         } else {
+//             if let Some(children) = category.children.clone() {
+//                 if let Some(category) = search_in_categories_by_name(&children, search_string) {
+//                     return Some(category);
+//                 }
+//             }
+//         }
+//     }
+//     None
+// }
