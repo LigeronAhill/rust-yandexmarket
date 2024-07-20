@@ -3,22 +3,12 @@
 //!
 //! Библиотека для работы с API Yandex.Market на языке программирования Rust
 
-use std::fmt::{Debug, Display};
-
 use anyhow::Result;
 use reqwest::Url;
 use secrecy::{ExposeSecret, Secret};
-use tracing::instrument;
+use tracing::{error, instrument};
 
-use crate::models::{
-    ApiErrorResponse, CalculateTariffsOfferDto, CalculateTariffsParametersDto,
-    CalculateTariffsRequest, CalculateTariffsResponse, CategoryDto, GetCampaignOffersRequest,
-    GetCampaignOffersResponse, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest,
-    GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse,
-    GetCategoryContentParametersResponse, GetOfferMappingsRequest, GetOfferMappingsResponse,
-    PaymentFrequencyType, SellingProgramType, UpdateCampaignOfferDto, UpdateCampaignOffersRequest,
-    UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse,
-};
+use crate::models::{ApiErrorResponse, ApiResponseStatusType, CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CampaignDto, CategoryDto, DeleteOffersRequest, DeleteOffersResponse, GetCampaignOfferDto, GetCampaignOffersRequest, GetCampaignOffersResponse, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingDto, GetOfferMappingsRequest, GetOfferMappingsResponse, PaymentFrequencyType, SellingProgramType, UpdateCampaignOfferDto, UpdateCampaignOffersRequest, UpdateOfferMappingDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse};
 
 pub mod models;
 
@@ -42,6 +32,14 @@ pub mod models;
 ///     Ok(())
 /// }
 ///```
+/// 1. Получите список категорий Маркета, выполнив запрос get_categories_tree.
+/// 2. Для каждой категории запросите список необходимых характеристик с помощью get_category_content_parameters.
+/// 3. Передайте информацию о товарах (названия, описания, фотографии и так далее), цены, категории на Маркете и характеристики с помощью запроса update_offer_mappings.
+/// 4. Чтобы узнать стоимость услуг Маркета для конкретных товаров, передайте их параметры в запросе tariffs_calculate.
+/// 5. Получите у Маркета список моделей, по которым можно продавать каждый из добавленных товаров с помощью запроса offer_mappings. [Что такое модель работы и какие модели есть](https://yandex.ru/support/marketplace/introduction/models.html).
+/// 6. Задайте условия размещения товаров с помощью запроса offers_update. Условия размещения — это минимальный объем заказа, квант продаж и ставка НДС. Если вы работаете по модели DBS, этим же запросом задаются параметры доставки.
+/// 7. Убедитесь, что товары появились на витрине, с помощью запроса get_campaign_offers.
+/// Подробные пояснения к статусам товаров вы найдете в [Справке Маркета для продавцов](https://yandex.ru/support/marketplace/assortment/add/statuses.html).
 #[derive(Debug)]
 pub struct MarketClient {
     token: Secret<String>,
@@ -50,15 +48,6 @@ pub struct MarketClient {
 }
 impl MarketClient {
     /// Создает новый экземпляр `MarketClient`.
-    ///
-    /// # Аргументы
-    ///
-    /// * `token` - API токен для авторизации..
-    ///
-    /// # Возвращаемое значение
-    ///
-    /// `Result` который может быть `Ok(Self)` или `Err(Error)`.
-    ///
     ///
     /// # Пример
     ///
@@ -235,31 +224,51 @@ impl MarketClient {
     ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
     ///     let client = MarketClient::new(token)?;
-    ///     info!("Client initialized successfully\n{client:#?}");
-    ///     let campaigns = client.get_campaigns(None, None).await?;
+    ///     let campaigns = client.get_campaigns().await?;
     ///     info!("Campaigns: {:#?}", campaigns);
     ///     Ok(())
     /// }
     /// ```
     #[instrument(skip(self))]
-    pub async fn get_campaigns(
-        &self,
-        page: Option<u16>,
-        page_size: Option<u16>,
-    ) -> Result<GetCampaignsResponse> {
+    pub async fn get_campaigns(&self) -> Result<Vec<CampaignDto>> {
         let uri = self.base_url.join("campaigns")?;
-        let page = page.unwrap_or(1);
-        let page_size = page_size.unwrap_or(10);
-        let response: GetCampaignsResponse = self
-            .client
-            .get(uri)
-            .query(&[("page", page), ("page_size", page_size)])
-            .bearer_auth(&self.token())
-            .send()
-            .await?
-            .json()
-            .await?;
-        Ok(response)
+        let mut page = 1;
+        let page_size = 10;
+        let mut result = Vec::new();
+        loop {
+            let response: GetCampaignsResponse = self
+                .client
+                .get(uri.clone())
+                .query(&[("page", page), ("page_size", page_size)])
+                .bearer_auth(&self.token())
+                .send()
+                .await?
+                .json()
+                .await?;
+            match response.campaigns {
+                None => {
+                    break;
+                }
+                Some(campaigns) => {
+                    result.extend(campaigns);
+                    match response
+                        .pager
+                        .and_then(|p| p.pages_count) {
+                        None => {
+                            break;
+                        }
+                        Some(count) => {
+                            if page < count {
+                                page += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(result)
     }
     /// Добавляет товары в каталог, передает их категории на Маркете и характеристики, необходимые для этих категории. Также редактирует информацию об уже имеющихся товарах.
     ///
@@ -442,9 +451,9 @@ impl MarketClient {
     /// }
     ///```
     #[instrument(skip(self, offers))]
-    pub async fn update_offer_mappings<T: Debug + Display>(
+    pub async fn update_offer_mappings(
         &self,
-        business_id: T,
+        business_id: i64,
         offers: Vec<UpdateOfferMappingDto>,
     ) -> Result<UpdateOfferMappingsResponse> {
         let endpoint = format!("businesses/{business_id}/offer-mappings/update");
@@ -548,48 +557,54 @@ impl MarketClient {
     ///     let request = Some(GetOfferMappingsRequest::builder()
     ///         .vendor_names(vec!["Haima".to_string()])
     ///         .build()?);
-    ///     let offer_mappings = client.offer_mappings(business_id, None, None, request).await?;
+    ///     let offer_mappings = client.offer_mappings(business_id, None).await?;
     ///     info!("Offer mappings: {:#?}", offer_mappings);
     ///     Ok(())
     /// }
     /// ```
     #[instrument(skip(self))]
-    pub async fn offer_mappings<T: Display + Debug>(
+    pub async fn offer_mappings(
         &self,
-        business_id: T,
-        limit: Option<u32>,
-        page_token: Option<T>,
+        business_id: i64,
         body: Option<GetOfferMappingsRequest>,
-    ) -> Result<GetOfferMappingsResponse> {
+    ) -> Result<Vec<GetOfferMappingDto>> {
         let endpoint = format!("businesses/{business_id}/offer-mappings");
         let mut uri = self.base_url.join(&endpoint)?;
-        if let Some(limit) = limit {
-            let query = format!("limit={limit}");
-            uri.set_query(Some(query.as_str()))
+        uri.set_query(Some("limit=200"));
+        let mut page_token = None;
+        let mut result = Vec::new();
+        loop {
+            if let Some(next_page_token) = page_token.clone() {
+                let query = format!("page_token={next_page_token}");
+                uri.set_query(Some(query.as_str()))
+            }
+            let response: GetOfferMappingsResponse = if let Some(body) = body.clone() {
+                self.client
+                    .post(uri.clone())
+                    .bearer_auth(&self.token())
+                    .json(&body)
+                    .send()
+                    .await?
+                    .json()
+                    .await?
+            } else {
+                self.client
+                    .post(uri.clone())
+                    .bearer_auth(&self.token())
+                    .send()
+                    .await?
+                    .json()
+                    .await?
+            };
+            let offer_mappings = response.result.clone().and_then(|r| r.offer_mappings).unwrap_or_default();
+            result.extend(offer_mappings);
+            if let Some(next_page_token) = response.result.and_then(|r| r.paging.and_then(|p| p.next_page_token)) {
+                page_token = Some(next_page_token);
+            } else {
+                break;
+            }
         }
-        if let Some(page_token) = page_token {
-            let query = format!("page_token={page_token}");
-            uri.set_query(Some(query.as_str()))
-        }
-        let response: GetOfferMappingsResponse = if let Some(body) = body {
-            self.client
-                .post(uri)
-                .bearer_auth(&self.token())
-                .json(&body)
-                .send()
-                .await?
-                .json()
-                .await?
-        } else {
-            self.client
-                .get(uri)
-                .bearer_auth(&self.token())
-                .send()
-                .await?
-                .json()
-                .await?
-        };
-        Ok(response)
+        Ok(result)
     }
     /// Изменяет параметры размещения товаров в конкретном магазине: доступность товара, условия доставки и самовывоза, применяемую ставку НДС.
     ///
@@ -623,10 +638,10 @@ impl MarketClient {
     ///     Ok(())
     /// }
     /// ```
-    #[instrument(skip(self))]
-    pub async fn offers_update<T: Debug + Display>(
+    #[instrument(skip(self, offers))]
+    pub async fn offers_update(
         &self,
-        campaign_id: T,
+        campaign_id: i64,
         offers: Vec<UpdateCampaignOfferDto>,
     ) -> Result<ApiErrorResponse> {
         let endpoint = format!("campaigns/{}/offers/update", campaign_id);
@@ -660,53 +675,118 @@ impl MarketClient {
     ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
     ///     let client = MarketClient::new(token)?;
-    ///     info!("Client initialized successfully\n{client:#?}");
     ///     let offers = client
-    ///         .get_campaign_offers(112289474, None, None, None)
+    ///         .get_campaign_offers(112289474, None)
     ///         .await?;
     ///     info!("Offers: {:#?}", offers);
     ///     Ok(())
     /// }
     ///```
     #[instrument(skip(self))]
-    pub async fn get_campaign_offers<T: Debug + Display>(
+    pub async fn get_campaign_offers(
         &self,
-        campaign_id: T,
-        limit: Option<T>,
-        page_token: Option<T>,
+        campaign_id: i64,
         get_campaign_offers_request: Option<GetCampaignOffersRequest>,
-    ) -> Result<GetCampaignOffersResponse> {
+    ) -> Result<Vec<GetCampaignOfferDto>> {
         let endpoint = format!("campaigns/{}/offers", campaign_id);
         let mut uri = self.base_url.join(&endpoint)?;
-        if let Some(limit) = limit {
-            let query = format!("limit={limit}");
-            uri.set_query(Some(query.as_str()))
+        uri.set_query(Some("limit=200"));
+        let mut page_token = None;
+        let mut result = Vec::new();
+        loop {
+            if let Some(next_page_token) = page_token {
+                let query = format!("page_token={}", next_page_token);
+                uri.set_query(Some(query.as_str()));
+            }
+            let body = get_campaign_offers_request.clone().unwrap_or_default();
+            let response: GetCampaignOffersResponse = self.client
+                    .post(uri.clone())
+                    .bearer_auth(&self.token())
+                    .json(&body)
+                    .send()
+                    .await?
+                    .json()
+                    .await?;
+            let offers = response
+                .result
+                .clone()
+                .and_then(|r| r.offers)
+                .unwrap_or_default();
+            result.extend(offers);
+            match response.result.and_then(|r| r.paging.and_then(|s| s.next_page_token)) {
+                None => break,
+                Some(next_page_token) => {
+                    page_token = Some(next_page_token);
+                }
+            }
         }
-        if let Some(page_token) = page_token {
-            let query = format!("page_token={page_token}");
-            uri.set_query(Some(query.as_str()))
-        }
-        let result: GetCampaignOffersResponse = if let Some(body) = get_campaign_offers_request {
-            self.client
-                .post(uri)
-                .bearer_auth(&self.token())
-                .json(&body)
-                .send()
-                .await?
-                .json()
-                .await?
-        } else {
-            let body = GetCampaignOffersRequest::builder().build()?;
-            self.client
-                .post(uri)
-                .bearer_auth(&self.token())
-                .json(&body)
-                .send()
-                .await?
-                .json()
-                .await?
-        };
         Ok(result)
+    }
+    /// Удаляет товары из каталога.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    /// use rust_yandexmarket::models::GetOfferMappingsRequest;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token)?;
+    ///     let business_id = 919862;
+    ///     let req = GetOfferMappingsRequest::builder()
+    ///         .vendor_names(vec!["Haima".to_string()])
+    ///         .build()?;
+    ///     let offer_ids = client.offer_mappings(business_id, Some(req)).await?.into_iter().flat_map(|o| o.offer.map(|f| f.offer_id)).collect::<Vec<_>>();
+    ///     let not_deleted_offers = client.delete_offers(business_id, offer_ids).await?;
+    ///     info!("Not deleted offers: {not_deleted_offers:#?}");
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self, offer_ids))]
+    pub async fn delete_offers(
+        &self,
+        business_id: i64,
+        offer_ids: Vec<String>,
+    ) -> Result<Vec<String>> {
+        let endpoint = format!("businesses/{}/offer-mappings/delete", business_id);
+        let uri = self.base_url.join(&endpoint)?;
+        let mut not_deleted_offers = Vec::new();
+        for offer_ids_chunk in offer_ids.chunks(200) {
+            let body = DeleteOffersRequest::new(offer_ids_chunk.to_vec());
+            let result: DeleteOffersResponse = self
+                .client
+                .post(uri.clone())
+                .bearer_auth(&self.token())
+                .json(&body)
+                .send()
+                .await?
+                .json()
+                .await?;
+            let not_deleted = result
+                .result
+                .clone()
+                .and_then(|r| r.not_deleted_offer_ids)
+                .unwrap_or_default();
+            not_deleted_offers.extend(not_deleted);
+            if let Some(status) = result.status {
+                match status {
+                    ApiResponseStatusType::Ok => {}
+                    ApiResponseStatusType::Error => {
+                        error!("Error deleting offers: {:#?}", result);
+                        break;
+                    }
+                }
+            }
+        }
+        Ok(not_deleted_offers)
     }
 }
 pub fn search_in_categories_by_name(

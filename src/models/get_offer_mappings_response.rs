@@ -24,4 +24,13 @@ impl GetOfferMappingsResponse {
             result: None,
         }
     }
+    pub fn get_offer_ids(&self) -> Vec<String> {
+
+        self
+            .result
+            .clone()
+            .and_then(|r| r.offer_mappings)
+            .map(|s| s.iter().map(|o| o.offer.clone().map(|d| d.offer_id)).flatten().collect::<Vec<_>>())
+            .unwrap_or_default()
+    }
 }
