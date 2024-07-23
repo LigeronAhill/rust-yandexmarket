@@ -48,14 +48,17 @@ pub mod models;
 ///
 /// 1. Чтобы узнать стоимость услуг Маркета для конкретных товаров, передайте их параметры в запросе [`tariffs_calculate`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/tariffs/calculateTariffs).
 /// 2. Передайте новые цены для всех магазинов с помощью запроса [`offer_prices_updates`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/updateBusinessPrices).
-/// 3. Убедитесь, что ни один из товаров не попал в карантин с помощью запроса ['price_quarantine'](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/getBusinessQuarantineOffers).
+/// 3. Убедитесь, что ни один из товаров не попал в карантин с помощью запроса [`price_quarantine`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/getBusinessQuarantineOffers).
 /// 4. Если карантин не пустой, проверьте цены на товары. Ошибочно установленные цены для всех магазинов можно исправить запросом [`offer_prices_updates`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/updateBusinessPrices).
-/// 5. После того как в карантине останутся только правильные цены, подтвердите их запросом ['price_quarantine_confirm'](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/confirmBusinessPrices). Если ложные срабатывания карантина случаются часто, подумайте о том, чтобы изменить его порог по [инструкции](https://yandex.ru/support/marketplace/assortment/operations/prices.html#quarantine).
+/// 5. После того как в карантине останутся только правильные цены, подтвердите их запросом [`price_quarantine_confirm`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/confirmBusinessPrices). Если ложные срабатывания карантина случаются часто, подумайте о том, чтобы изменить его порог по [инструкции](https://yandex.ru/support/marketplace/assortment/operations/prices.html#quarantine).
 ///
 /// ## Как управлять товарами в архиве
 /// 1. Для архивации товаров используйте запрос [`offer_mappings_archive`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/addOffersToArchive). Если товары не удалось архивировать, они вернутся в ответе запроса.
 /// 2. Для просмотра товаров в архиве используйте фильтр `archived` в запросе [`offer_mappings`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/getOfferMappings)
 /// 3. Чтобы восстановить товар из архива, используйте запрос [`offer_mappings_unarchive`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/business-assortment/deleteOffersFromArchive)
+/// 
+/// ## Передача остатков по API
+/// С помощью запроса [`update_stock`](https://yandex.ru/dev/market/partner-api/doc/ru/reference/stocks/updateStocks)
 #[derive(Debug)]
 pub struct MarketClient {
     token: Secret<String>,
