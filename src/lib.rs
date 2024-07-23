@@ -8,22 +8,7 @@ use reqwest::Url;
 use secrecy::{ExposeSecret, Secret};
 use tracing::{error, instrument};
 
-use crate::models::{
-    AddOffersToArchiveErrorDto, AddOffersToArchiveRequest, AddOffersToArchiveResponse,
-    ApiErrorResponse, ApiResponseStatusType, CalculateTariffsOfferDto,
-    CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CampaignDto,
-    CategoryDto, ConfirmPricesRequest, DeleteOffersFromArchiveRequest,
-    DeleteOffersFromArchiveResponse, DeleteOffersRequest, DeleteOffersResponse,
-    GetCampaignOfferDto, GetCampaignOffersRequest, GetCampaignOffersResponse, GetCampaignsResponse,
-    GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse,
-    GetCategoryContentParametersResponse, GetOfferMappingDto, GetOfferMappingsRequest,
-    GetOfferMappingsResponse, GetOfferRecommendationsRequest, GetOfferRecommendationsResponse,
-    GetQuarantineOffersRequest, GetQuarantineOffersResponse, OfferRecommendationDto,
-    PaymentFrequencyType, QuarantineOfferDto, SellingProgramType, UpdateBusinessOfferPriceDto,
-    UpdateBusinessPricesRequest, UpdateCampaignOfferDto, UpdateCampaignOffersRequest,
-    UpdateOfferMappingDto, UpdateOfferMappingResultDto, UpdateOfferMappingsRequest,
-    UpdateOfferMappingsResponse,
-};
+use crate::models::{AddOffersToArchiveErrorDto, AddOffersToArchiveRequest, AddOffersToArchiveResponse, ApiErrorResponse, ApiResponseStatusType, CalculateTariffsOfferDto, CalculateTariffsParametersDto, CalculateTariffsRequest, CalculateTariffsResponse, CampaignDto, CategoryDto, ConfirmPricesRequest, DeleteOffersFromArchiveRequest, DeleteOffersFromArchiveResponse, DeleteOffersRequest, DeleteOffersResponse, GetCampaignOfferDto, GetCampaignOffersRequest, GetCampaignOffersResponse, GetCampaignsResponse, GetCategoriesMaxSaleQuantumRequest, GetCategoriesMaxSaleQuantumResponse, GetCategoriesResponse, GetCategoryContentParametersResponse, GetOfferMappingDto, GetOfferMappingsRequest, GetOfferMappingsResponse, GetOfferRecommendationsRequest, GetOfferRecommendationsResponse, GetQuarantineOffersRequest, GetQuarantineOffersResponse, OfferRecommendationDto, PaymentFrequencyType, QuarantineOfferDto, SellingProgramType, UpdateBusinessOfferPriceDto, UpdateBusinessPricesRequest, UpdateCampaignOfferDto, UpdateCampaignOffersRequest, UpdateOfferMappingDto, UpdateOfferMappingResultDto, UpdateOfferMappingsRequest, UpdateOfferMappingsResponse, UpdateStockDto, UpdateStocksRequest};
 
 pub mod models;
 
@@ -42,7 +27,7 @@ pub mod models;
 ///         .finish();
 ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
-///     let client = MarketClient::new(token)?;
+///     let client = MarketClient::new(token).await?;
 ///     // do something with the client
 ///     Ok(())
 /// }
@@ -95,7 +80,7 @@ impl MarketClient {
     ///         .finish();
     ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
-    ///     let client = MarketClient::new(token)?;
+    ///     let client = MarketClient::new(token).await?;
     ///     // do something with the client
     ///     Ok(())
     /// }
@@ -115,7 +100,6 @@ impl MarketClient {
         let campaigns = result.get_campaigns().await?;
         let business_id = campaigns
             .first()
-            .clone()
             .and_then(|c| c.clone().business.and_then(|b| b.id))
             .unwrap_or_default();
         result.business_id = business_id;
@@ -944,7 +928,7 @@ impl MarketClient {
         uri.set_query(Some("limit=200"));
         let mut page_token = None;
         let mut result = Vec::new();
-        let body = req.unwrap_or(GetQuarantineOffersRequest::new());
+        let body = req.unwrap_or_default();
         loop {
             if let Some(next_page_token) = page_token {
                 let query = format!("page_token={}", next_page_token);
@@ -1030,6 +1014,34 @@ impl MarketClient {
         Ok(())
     }
     /// Помещает товары в архив. Товары, помещенные в архив, скрыты с витрины во всех магазинах кабинета.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token).await?;
+    ///     let offer_ids = vec![String::from("AW Carolus 75 0.8x1.5 - 2 pcs")];
+    ///     let not_archived = client
+    ///         .offer_mappings_archive(offer_ids.clone())
+    ///         .await?;
+    ///     info!("Not archived: {:#?}", not_archived);
+    ///     let not_unarchived = client
+    ///         .offer_mappings_unarchive(offer_ids)
+    ///         .await?;
+    ///     info!("Not unarchived: {:#?}", not_unarchived);
+    ///     Ok(())
+    /// }
+    /// ```
     #[instrument(skip(self, offer_ids))]
     pub async fn offer_mappings_archive(
         &self,
@@ -1058,6 +1070,34 @@ impl MarketClient {
         Ok(result)
     }
     /// Восстанавливает товары из архива.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use tracing::info;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token).await?;
+    ///     let offer_ids = vec![String::from("AW Carolus 75 0.8x1.5 - 2 pcs")];
+    ///     let not_archived = client
+    ///         .offer_mappings_archive(offer_ids.clone())
+    ///         .await?;
+    ///     info!("Not archived: {:#?}", not_archived);
+    ///     let not_unarchived = client
+    ///         .offer_mappings_unarchive(offer_ids)
+    ///         .await?;
+    ///     info!("Not unarchived: {:#?}", not_unarchived);
+    ///     Ok(())
+    /// }
+    /// ```
     #[instrument(skip(self, offer_ids))]
     pub async fn offer_mappings_unarchive(&self, offer_ids: Vec<String>) -> Result<Vec<String>> {
         let endpoint = format!("businesses/{}/offer-mappings/unarchive", self.business_id);
@@ -1082,6 +1122,55 @@ impl MarketClient {
         }
         Ok(result)
     }
+    /// Передает данные об остатках товаров на витрине.
+    ///
+    /// Обязательно указывайте SKU в точности так, как он указан в каталоге. Например, 557722 и 0557722 — это два разных SKU.
+    ///
+    /// # Пример
+    ///
+    /// ```rust
+    /// use anyhow::Result;
+    /// use rust_yandexmarket::MarketClient;
+    /// use rust_yandexmarket::models::UpdateStockDto;
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///     let subscriber = tracing_subscriber::fmt()
+    ///         .with_max_level(tracing::Level::DEBUG)
+    ///         .finish();
+    ///     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    ///     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
+    ///     let client = MarketClient::new(token).await?;
+    ///     let stock_item = UpdateStockDto::new("AW Carolus 75 0.8x1.5 - 2 pcs", vec![4.6]);
+    ///     dbg!(&stock_item);
+    ///     for campaign_id in client.campaign_ids() {
+    ///         client.update_stock(campaign_id, vec![stock_item.clone()]).await?;
+    ///     }
+    ///     Ok(())
+    /// }
+    /// ```
+    #[instrument(skip(self, stock))]
+    pub async fn update_stock(&self, campaign_id: i64, stock: Vec<UpdateStockDto>) -> Result<()> {
+        let endpoint = format!("campaigns/{campaign_id}/offers/stocks");
+        let uri = self.base_url.join(&endpoint)?;
+        let body = UpdateStocksRequest::new(stock);
+        let result: ApiErrorResponse = self
+            .client
+            .put(uri)
+            .bearer_auth(self.token())
+            .json(&body)
+            .send()
+            .await?
+            .json()
+            .await?;
+        if result
+            .status
+            .is_some_and(|s| s == ApiResponseStatusType::Error)
+        {
+            error!("Error:\n{:?}", result.errors)
+        }
+        Ok(())
+    }
 }
 pub trait SearchByName {
     fn search_by_name(&self, search_string: &str) -> Option<CategoryDto>;
@@ -1095,11 +1184,9 @@ impl SearchByName for Vec<CategoryDto> {
                 .contains(&search_string.to_lowercase())
             {
                 return Some(category.clone());
-            } else {
-                if let Some(children) = category.children.clone() {
-                    if let Some(category) = children.search_by_name(search_string) {
-                        return Some(category);
-                    }
+            } else if let Some(children) = category.children.clone() {
+                if let Some(category) = children.search_by_name(search_string) {
+                    return Some(category);
                 }
             }
         }
