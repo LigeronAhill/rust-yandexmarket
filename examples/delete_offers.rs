@@ -10,18 +10,17 @@ async fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
-    let client = MarketClient::new(token)?;
-    let business_id = 919862;
+    let client = MarketClient::new(token).await?;
     let req = GetOfferMappingsRequest::builder()
         .vendor_names(vec!["Haima".to_string()])
         .build()?;
     let offer_ids = client
-        .offer_mappings(business_id, Some(req))
+        .offer_mappings(Some(req))
         .await?
         .into_iter()
         .flat_map(|o| o.offer.map(|f| f.offer_id))
         .collect::<Vec<_>>();
-    let not_deleted_offers = client.delete_offers(business_id, offer_ids).await?;
+    let not_deleted_offers = client.delete_offers(offer_ids).await?;
     info!("Not deleted offers: {not_deleted_offers:#?}");
     Ok(())
 }

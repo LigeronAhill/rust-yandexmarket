@@ -10,8 +10,7 @@ async fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
-    let client = MarketClient::new(token)?;
-    info!("Client initialized successfully\n{client:#?}");
+    let client = MarketClient::new(token).await?;
     let offers = vec![CalculateTariffsOfferDto::new(
         6119048,
         21990.0,

@@ -9,14 +9,13 @@ async fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
-    let client = MarketClient::new(token)?;
-    let business_id = 919862;
-    let quarantine = client.price_quarantine(business_id, None).await?;
+    let client = MarketClient::new(token).await?;
+    let quarantine = client.price_quarantine(None).await?;
     info!("{quarantine:#?}");
     let offer_ids = quarantine
         .into_iter()
         .flat_map(|q| q.offer_id)
         .collect::<Vec<_>>();
-    client.price_quarantine_confirm(business_id, offer_ids).await?;
+    client.price_quarantine_confirm(offer_ids).await?;
     Ok(())
 }

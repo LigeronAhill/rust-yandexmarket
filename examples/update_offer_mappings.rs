@@ -10,9 +10,7 @@ async fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
-    let client = MarketClient::new(token)?;
-    info!("Client initialized successfully\n{client:#?}");
-    let business_id = 919862;
+    let client = MarketClient::new(token).await?;
     let category_id = 6119048;
     let content_parameters = client
         .get_category_content_parameters(category_id)
@@ -122,9 +120,9 @@ async fn main() -> Result<()> {
         .cofinance_price(21990.0)
         .build()?;
     let update_offers_mapping_dto = vec![UpdateOfferMappingDto::new(offer)];
-    let update_result = client
-        .update_offer_mappings(business_id, update_offers_mapping_dto)
+    let not_updated_offers_result = client
+        .update_offer_mappings(update_offers_mapping_dto)
         .await?;
-    info!("Update result:\n{:#?}", update_result);
+    info!("Update result:\n{:#?}", not_updated_offers_result);
     Ok(())
 }

@@ -9,8 +9,10 @@ async fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     let token = std::env::var("MARKET_TOKEN").expect("MARKET_TOKEN must be set");
-    let client = MarketClient::new(token)?;
-    let offers = client.get_campaign_offers(112289474, None).await?;
-    info!("Offers: {:#?}", offers);
+    let client = MarketClient::new(token).await?;
+    for campaign_id in client.campaign_ids() {
+        let offers = client.get_campaign_offers(campaign_id, None).await?;
+        info!("Offers: {:#?}", offers);
+    }
     Ok(())
 }
